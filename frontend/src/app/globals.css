@@ -1,0 +1,274 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Hind+Siliguri:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap');
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════
+   TAILWIND CSS v4 THEME CONFIGURATION
+   ═══════════════════════════════════════════════ */
+@theme {
+  /* ── Breakpoints ── */
+  --breakpoint-xs: 375px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  --breakpoint-3xl: 1920px;
+
+  /* ── Admin / Global Colors (Light Mode Enforced) ── */
+  --color-primary: #f43b27;
+  --color-primary-light: #ff6b5b;
+  --color-primary-dark: #cc2f1e;
+  --color-primary-glow: rgba(244, 59, 39, 0.3);
+  --color-accent: #f43b27;
+  --color-accent-light: #ff6b5b;
+  --color-accent-dark: #cc2f1e;
+  
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f9f9f9;
+  --color-bg-tertiary: #f1f1f1;
+  --color-bg-card: #ffffff;
+  --color-bg-elevated: #ffffff;
+  
+  --color-text: #111111;
+  --color-text-secondary: #4a4a4a;
+  --color-text-muted: #888888;
+  --color-text-accent: #f43b27;
+  
+  --color-border: #e5e5e5;
+  --color-border-light: #f0f0f0;
+  --color-border-active: #f43b27;
+  
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+  
+  --color-glass-bg: rgba(255, 255, 255, 0.7);
+  --color-glass-border: rgba(0, 0, 0, 0.06);
+
+  /* ── Datum Theme Colors (Homepage) ── */
+  --color-datum-bg: #F8F8F6;
+  --color-datum-surface: #FFFFFF;
+  --color-datum-ink: #15161A;
+  --color-datum-ink-soft: #6B6D74;
+  --color-datum-ink-faint: #9C9EA3;
+  --color-datum-line: #DEDFDA;
+  --color-datum-line-strong: #C4C6BF;
+  --color-datum-accent: #2C4CB4;
+  --color-datum-accent-soft: #EAEFFA;
+  --color-datum-accent-dark: #1E3585;
+
+  /* ── Reading Mode Colors (Post detail) ── */
+  --color-paper: #EFF1EA;
+  --color-paper-raised: #F8F9F4;
+  --color-ink: #14213D;
+  --color-ink-soft: #3A4560;
+  --color-muted: #6B6F5F;
+  --color-teal: #2F6F62;
+  --color-teal-dark: #1F4E44;
+  --color-ochre: #C08A3E;
+  --color-rule: #D9DBCE;
+
+  /* ── Fonts ── */
+  --font-display: 'Noto Sans Bengali', 'Outfit', sans-serif;
+  --font-body: 'Noto Sans Bengali', 'Inter', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-datum-display: 'Noto Sans Bengali', 'Space Grotesk', sans-serif;
+  --font-datum-body: 'Noto Sans Bengali', 'IBM Plex Sans', sans-serif;
+  --font-datum-mono: 'IBM Plex Mono', monospace;
+  --font-reading-serif: 'Source Serif 4', Georgia, serif;
+  --font-reading-display: 'Fraunces', Georgia, serif;
+
+  /* ── Shadows ── */
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.05);
+  --shadow-glass-hover: 0 8px 32px rgba(244, 59, 39, 0.1);
+  --shadow-primary: 0 4px 16px rgba(244, 59, 39, 0.25);
+
+  /* ── Animations ── */
+  --animate-fade-in: fade-in 0.4s ease-out forwards;
+  --animate-slide-in: slide-in-right 0.3s ease-out forwards;
+  --animate-spin-slow: spin 0.6s linear infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(244, 59, 39, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(244, 59, 39, 0.4); }
+}
+
+/* ═══════════════════════════════════════════════
+   BASE LAYER — Resets & un-Tailwind-able styles
+   ═══════════════════════════════════════════════ */
+@layer base {
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px; /* Base for mobile */
+  }
+
+  @media (min-width: 1024px) {
+    html {
+      font-size: 18px; /* Increased by ~2 sizes for desktop */
+    }
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-text);
+    background: var(--color-bg);
+    line-height: 1.6;
+  }
+
+  img { max-width: 100%; height: auto; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-bg-secondary); }
+  ::-webkit-scrollbar-thumb { background: var(--color-border-light); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+}
+
+/* ═══════════════════════════════════════════════
+   COMPONENT LAYER — Complex selectors that can't
+   be expressed purely as Tailwind utility classes
+   ═══════════════════════════════════════════════ */
+@layer components {
+  /* ── Spinner (referenced widely) ── */
+  .spinner {
+    @apply w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin;
+  }
+  .spinner-lg {
+    @apply w-8 h-8;
+  }
+
+  /* ── ProseMirror Editor Content ──
+     These target generated HTML content we can't add classes to */
+  .ProseMirror {
+    outline: none !important;
+    position: relative;
+    min-height: 297mm;
+    width: 210mm;
+    margin: 0 auto;
+    padding: 25.4mm;
+    font-family: var(--font-body);
+    line-height: 1.7;
+    color: black;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      white 0,
+      white calc(297mm - 20px),
+      transparent calc(297mm - 20px),
+      transparent 297mm
+    );
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+  }
+  .ProseMirror p { margin-top: 0; margin-bottom: 0.5em; }
+  .ProseMirror p:empty { height: 1.5em; margin-bottom: 0; }
+  .ProseMirror h1, .ProseMirror h2, .ProseMirror h3,
+  .ProseMirror h4, .ProseMirror h5, .ProseMirror h6 {
+    margin-top: 1.5em; margin-bottom: 0.5em;
+    font-family: var(--font-display);
+  }
+  .ProseMirror h1 { font-size: 2em; }
+  .ProseMirror h2 { font-size: 1.5em; }
+  .ProseMirror h3 { font-size: 1.25em; }
+  .ProseMirror h4 { font-size: 1.1em; }
+  .ProseMirror a { color: var(--color-primary-light); text-decoration: underline; cursor: pointer; }
+  .ProseMirror a:hover { color: var(--color-accent); }
+  .ProseMirror ul, .ProseMirror ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  .ProseMirror ul { list-style-type: disc; }
+  .ProseMirror ol { list-style-type: decimal; }
+  .ProseMirror blockquote {
+    border-left: 3px solid var(--color-primary);
+    margin-left: 0; padding-left: 1rem;
+    color: var(--color-text-secondary); font-style: italic;
+  }
+  
+  /* ── Datum Header Pseudo-elements ── */
+  .datum-logo-mark {
+    @apply relative w-2.5 h-2.5 rounded-sm;
+    background: var(--color-datum-accent);
+  }
+  .datum-logo-mark::before {
+    content: ''; position: absolute;
+    top: -3px; left: -3px; right: -3px; bottom: -3px;
+    border: 1px solid var(--color-datum-accent);
+    border-radius: 4px; opacity: 0.4;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   UTILITY LAYER — Custom decorations
+   ═══════════════════════════════════════════════ */
+@utility bg-dot-grid-hero {
+  background-image: radial-gradient(circle, var(--color-datum-line-strong) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+@utility bg-dot-grid-featured {
+  background-image: radial-gradient(circle, var(--color-datum-line-strong) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+@utility crosshair {
+  position: relative;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: calc(50% - 17px);
+    width: 34px;
+    height: 1.4px;
+    background-color: var(--color-datum-accent);
+  }
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: calc(50% - 17px);
+    height: 34px;
+    width: 1.4px;
+    background-color: var(--color-datum-accent);
+  }
+}
+@utility corner-bracket {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border: 1.4px solid var(--color-datum-accent);
+}
+@utility corner-bracket-tl {
+  top: -1px;
+  left: -1px;
+  border-right: none;
+  border-bottom: none;
+}
+@utility corner-bracket-tr {
+  top: -1px;
+  right: -1px;
+  border-left: none;
+  border-bottom: none;
+}
+@utility corner-bracket-bl {
+  bottom: -1px;
+  left: -1px;
+  border-right: none;
+  border-top: none;
+}
+@utility corner-bracket-br {
+  bottom: -1px;
+  right: -1px;
+  border-left: none;
+  border-top: none;
+}

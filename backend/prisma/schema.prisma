@@ -1,0 +1,261 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+// ─────────────────────────────────────────────
+// User (Admin)
+// ─────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String   // bcrypt hashed
+  name      String
+  role      Role     @default(USER)
+  avatar    String?  // Cloudinary URL
+
+  posts     Post[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// Post (Blog Content)
+// ─────────────────────────────────────────────
+
+model Post {
+  id              String     @id @default(uuid())
+  title           String     @db.VarChar(255)
+  slug            String     @unique @db.VarChar(255)
+  content         String     @db.LongText  // Sanitized HTML from Tiptap
+  excerpt         String?    @db.Text      // Short preview text
+  coverImage      String?                  // Cloudinary URL for cover
+
+  // SEO Metadata
+  metaTitle       String?    @db.VarChar(160)
+  metaDescription String?    @db.VarChar(320)
+  ogImage         String?                  // Open Graph image URL
+
+  status          PostStatus @default(DRAFT)
+
+  // Homepage-specific
+  isFeatured      Boolean    @default(false)
+  readTime        Int?
+  displayOrder    Int?
+  views           Int        @default(0)
+
+  // Relations
+  authorId        String
+  author          User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  categoryId      String?
+  category        Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  media           Media[]
+  comments        Comment[]
+
+  publishedAt     DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([slug])
+  @@index([status])
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([isFeatured])
+  @@map("posts")
+}
+
+// ─────────────────────────────────────────────
+// Media (Cloudinary Assets)
+// ─────────────────────────────────────────────
+
+model Media {
+  id          String    @id @default(uuid())
+  publicId    String    @unique            // Cloudinary public_id
+  url         String    @db.Text           // Direct URL
+  secureUrl   String    @db.Text           // HTTPS URL
+  format      String                       // jpg, png, mp4, etc.
+  type        MediaType                    // IMAGE or VIDEO
+  hlsUrl      String?   @db.Text           // HLS .m3u8 URL (videos only)
+
+  width       Int?
+  height      Int?
+  bytes       Int?                         // File size in bytes
+  alt         String?   @db.VarChar(255)   // Alt text for SEO
+
+  // Relations
+  postId      String?
+  post        Post?     @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([postId])
+  @@index([type])
+  @@map("media")
+}
+
+// ─────────────────────────────────────────────
+// Site Settings (Singleton)
+// ─────────────────────────────────────────────
+
+model SiteSettings {
+  id                String   @id @default("default")
+
+  // Header
+  siteName          String   @default("DATUM")
+  navLinks          Json     @default("[]")   // [{label, href}]
+  headerCtaText     String?  @default("Subscribe")
+  headerCtaLink     String?  @default("#subscribe")
+
+  // Hero
+  heroCoordText     String?
+  heroTitle         String   @db.Text
+  heroSubtitle      String?  @db.Text
+  heroPrimaryBtnText   String?  @default("Browse the index")
+  heroPrimaryBtnLink   String?  @default("#index")
+  heroSecondaryBtnText String?  @default("Get new notes by email")
+  heroSecondaryBtnLink String?  @default("#subscribe")
+  heroPanelLabel    String?  @default("N 41.203 / E 6.004")
+  heroImage         String?  @db.Text
+
+  // Newsletter
+  newsletterTitle       String?  @db.Text
+  newsletterSubtitle    String?  @db.Text
+  newsletterPlaceholder String?  @default("your@email.com")
+  newsletterBtnText     String?  @default("Subscribe")
+  newsletterNote        String?  @default("Free. Unsubscribe anytime.")
+
+  // Footer
+  footerMark        String?
+  footerLinks       Json     @default("[]")   // [{label, href}]
+
+  // Sidebar Configuration
+  sidebarAboutImage String?   @db.Text
+  sidebarAboutText  String?   @db.Text
+  sidebarCustomHtml String?   @db.Text        // For Goodreads/Substack iframes
+
+  // Widget Toggles
+  showSidebarAbout      Boolean @default(true)
+  showSidebarNewsletter Boolean @default(true)
+  showSidebarRecent     Boolean @default(true)
+  showSidebarCategories Boolean @default(true)
+  showSidebarTags       Boolean @default(true)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("site_settings")
+}
+
+// ─────────────────────────────────────────────
+// Newsletter Subscriber
+// ─────────────────────────────────────────────
+
+model Subscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("subscribers")
+}
+
+// ─────────────────────────────────────────────
+// Category
+// ─────────────────────────────────────────────
+
+model Category {
+  id    String @id @default(uuid())
+  name  String @unique
+  slug  String @unique
+  posts Post[]
+
+  parentId String?
+  parent   Category?  @relation("Subcategories", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("Subcategories")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("categories")
+}
+
+// ─────────────────────────────────────────────
+// Comments
+// ─────────────────────────────────────────────
+
+model Comment {
+  id          String   @id @default(uuid())
+  content     String   @db.Text
+  authorName  String
+  authorEmail String?
+  
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  parentId    String?
+  parent      Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies     Comment[] @relation("CommentReplies")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([postId])
+  @@index([parentId])
+  @@map("comments")
+}
+
+// ─────────────────────────────────────────────
+// About Page Settings (Singleton)
+// ─────────────────────────────────────────────
+
+model AboutPage {
+  id              String   @id @default("default")
+  
+  name            String   @default("John Doe")
+  designation     String   @default("Developer")
+  phone           String?
+  email           String?
+  
+  biography       String   @db.Text
+  
+  profileImage    String?  @db.Text
+  signatureImage  String?  @db.Text
+  
+  skills          Json     @default("[]") // [{name: string, percentage: number}]
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@map("about_page")
+}
