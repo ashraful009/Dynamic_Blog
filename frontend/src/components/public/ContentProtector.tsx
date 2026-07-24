@@ -3,12 +3,8 @@ import { useEffect } from "react";
 import toast from "react-hot-toast";
 export default function ContentProtector() {
   useEffect(() => {
-    const handleContextMenu = (e: MouseEvent) => {
-      // e.preventDefault();
-      // toast.error("Right-click is disabled on this site.", {
-      //   id: "anti-copy-toast",
-      // });
-    };
+    // Right-click is now enabled
+    // const handleContextMenu = (e: MouseEvent) => { ... };
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
         e.preventDefault();
@@ -41,11 +37,9 @@ export default function ContentProtector() {
     const handleDragStart = (e: DragEvent) => {
       e.preventDefault();
     };
-    document.addEventListener("contextmenu", handleContextMenu);
     document.addEventListener("keydown", handleKeyDown);
     document.addEventListener("dragstart", handleDragStart);
     return () => {
-      document.removeEventListener("contextmenu", handleContextMenu);
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("dragstart", handleDragStart);
     };
