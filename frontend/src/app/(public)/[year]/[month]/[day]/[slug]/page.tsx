@@ -11,7 +11,7 @@ import Image from "next/image";
 import { format } from "date-fns";
 async function getPost(slug: string) {
   try {
-    const res = await fetch(`http://localhost:5000/api/v1/posts/${slug}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://zibon-blog.onrender.com/api/v1"}/posts/${slug}`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) {
@@ -28,7 +28,7 @@ async function getPost(slug: string) {
 
 async function getHomepageData() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1"}/homepage`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://zibon-blog.onrender.com/api/v1"}/homepage`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error("Failed to fetch");
