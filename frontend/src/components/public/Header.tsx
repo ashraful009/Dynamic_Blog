@@ -13,7 +13,7 @@ export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, user, hydrate } = useAuthStore();
+  const { isAuthenticated, user, hydrate, logout } = useAuthStore();
 
   const { data: catRes } = useQuery({
     queryKey: ["public-categories"],
@@ -100,12 +100,23 @@ export default function Header() {
             {/* Right Side Actions */}
             <div className="flex items-center gap-2">
               {isAuthenticated ? (
-                <Link
-                  href={user?.role === "ADMIN" ? "/zibon/dashboard" : "/"}
-                  className="hidden md:flex px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-all no-underline"
-                >
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    href={user?.role === "ADMIN" ? "/zibon/dashboard" : "/"}
+                    className="hidden md:flex px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-all no-underline"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout();
+                      window.location.href = "/login";
+                    }}
+                    className="hidden md:flex px-4 py-2 rounded-lg text-sm font-medium text-text bg-black/5 hover:bg-black/10 transition-all border-none cursor-pointer"
+                  >
+                    Logout
+                  </button>
+                </>
               ) : (
                 <Link
                   href="/login"
@@ -186,9 +197,20 @@ export default function Header() {
             
             <div className="h-px bg-border my-2 mx-4" />
             {isAuthenticated ? (
-              <Link href={user?.role === "ADMIN" ? "/zibon/dashboard" : "/"} className="px-4 py-3 rounded-lg text-sm font-medium no-underline text-white bg-primary text-center mx-4">
-                Dashboard
-              </Link>
+              <div className="flex flex-col gap-2 mx-4">
+                <Link href={user?.role === "ADMIN" ? "/zibon/dashboard" : "/"} className="px-4 py-3 rounded-lg text-sm font-medium no-underline text-white bg-primary text-center">
+                  Dashboard
+                </Link>
+                <button
+                  onClick={() => {
+                    logout();
+                    window.location.href = "/login";
+                  }}
+                  className="px-4 py-3 rounded-lg text-sm font-medium text-text bg-black/5 text-center border-none cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
             ) : (
               <Link href="/login" className="px-4 py-3 rounded-lg text-sm font-medium no-underline text-white bg-primary text-center mx-4">
                 Login
