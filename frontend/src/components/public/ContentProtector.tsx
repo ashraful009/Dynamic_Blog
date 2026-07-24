@@ -4,10 +4,10 @@ import toast from "react-hot-toast";
 export default function ContentProtector() {
   useEffect(() => {
     const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-      toast.error("Right-click is disabled on this site.", {
-        id: "anti-copy-toast",
-      });
+      // e.preventDefault();
+      // toast.error("Right-click is disabled on this site.", {
+      //   id: "anti-copy-toast",
+      // });
     };
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "c") {
