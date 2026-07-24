@@ -5,7 +5,7 @@ import Sidebar from "@/components/public/sidebar/Sidebar";
 export const dynamic = "force-dynamic";
 async function getHomepageData() {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1"}/homepage`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://zibon-blog.onrender.com/api/v1"}/homepage`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error("Failed to fetch");
