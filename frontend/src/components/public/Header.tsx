@@ -157,13 +157,21 @@ export default function Header() {
 
                   return (
                     <div key={cat.id} className="group relative h-full flex items-center">
-                      <Link
-                        href={`/category/${cat.slug}`}
-                        className="flex items-center gap-1.5 text-[15px] font-medium text-text-secondary hover:text-primary transition-colors py-3 no-underline"
-                      >
-                        {cat.name}
-                        {hasChildren && <ChevronDown size={14} className="text-primary transition-transform duration-200 group-hover:rotate-180" />}
-                      </Link>
+                      {hasChildren ? (
+                        <button
+                          className="flex items-center gap-1.5 text-[15px] font-medium text-text-secondary hover:text-primary transition-colors py-3 no-underline border-none bg-transparent cursor-pointer"
+                        >
+                          {cat.name}
+                          <ChevronDown size={14} className="text-primary transition-transform duration-200 group-hover:rotate-180" />
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/category/${cat.slug}`}
+                          className="flex items-center gap-1.5 text-[15px] font-medium text-text-secondary hover:text-primary transition-colors py-3 no-underline"
+                        >
+                          {cat.name}
+                        </Link>
+                      )}
 
                       {hasChildren && (
                         <div className={`hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-0 w-48 rounded-b-xl overflow-hidden py-2 ${theme.dropdownBg} shadow-lg border-t-2 border-t-primary z-50`}>
