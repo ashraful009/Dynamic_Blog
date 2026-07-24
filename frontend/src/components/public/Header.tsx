@@ -90,14 +90,24 @@ export default function Header() {
               </Link>
             </nav>
 
-            {/* Mobile Toggle */}
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className={`md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-transparent border-none cursor-pointer transition-colors ${theme.iconBtn}`}
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
+            {/* Right Side Actions */}
+            <div className="flex items-center gap-2">
+              <Link
+                href="/login"
+                className="hidden md:flex px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-all no-underline"
+              >
+                Login
+              </Link>
+
+              {/* Mobile Toggle */}
+              <button
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className={`md:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-transparent border-none cursor-pointer transition-colors ${theme.iconBtn}`}
+                aria-label="Toggle menu"
+              >
+                {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -158,6 +168,10 @@ export default function Header() {
               Contact
             </Link>
             
+            <div className="h-px bg-border my-2 mx-4" />
+            <Link href="/login" className="px-4 py-3 rounded-lg text-sm font-medium no-underline text-white bg-primary text-center">
+              Login
+            </Link>
             <div className="h-px bg-border my-2 mx-4" />
             
             {categories
