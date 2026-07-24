@@ -6,17 +6,24 @@ import { Menu, X, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { categoriesApi } from "@/lib/api";
 
+import { useAuthStore } from "@/store/authStore";
+
 export default function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated, user, hydrate } = useAuthStore();
 
   const { data: catRes } = useQuery({
     queryKey: ["public-categories"],
     queryFn: () => categoriesApi.getAll(),
   });
   const categories = catRes?.data?.data || [];
+
+  useEffect(() => {
+    hydrate();
+  }, [hydrate]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -92,12 +99,21 @@ export default function Header() {
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-2">
-              <Link
-                href="/login"
-                className="hidden md:flex px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-all no-underline"
-              >
-                Login
-              </Link>
+              {isAuthenticated ? (
+                <Link
+                  href={user?.role === "ADMIN" ? "/zibon/dashboard" : "/"}
+                  className="hidden md:flex px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-all no-underline"
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="hidden md:flex px-4 py-2 rounded-lg text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-all no-underline"
+                >
+                  Login
+                </Link>
+              )}
 
               {/* Mobile Toggle */}
               <button
@@ -169,9 +185,15 @@ export default function Header() {
             </Link>
             
             <div className="h-px bg-border my-2 mx-4" />
-            <Link href="/login" className="px-4 py-3 rounded-lg text-sm font-medium no-underline text-white bg-primary text-center">
-              Login
-            </Link>
+            {isAuthenticated ? (
+              <Link href={user?.role === "ADMIN" ? "/zibon/dashboard" : "/"} className="px-4 py-3 rounded-lg text-sm font-medium no-underline text-white bg-primary text-center mx-4">
+                Dashboard
+              </Link>
+            ) : (
+              <Link href="/login" className="px-4 py-3 rounded-lg text-sm font-medium no-underline text-white bg-primary text-center mx-4">
+                Login
+              </Link>
+            )}
             <div className="h-px bg-border my-2 mx-4" />
             
             {categories
