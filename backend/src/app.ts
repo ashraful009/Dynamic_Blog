@@ -69,6 +69,12 @@ app.get("/api/v1/health", (_req: Request, res: Response) => {
     environment: config.nodeEnv,
   });
 });
+app.get("/", (_req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: "Welcome to Zibon-Vlog API",
+  });
+});
 app.use((_req: Request, res: Response) => {
   res.status(404).json({
     success: false,

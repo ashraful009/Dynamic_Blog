@@ -9,7 +9,7 @@ async function bootstrap(): Promise<void> {
       console.log(`
      Port:        ${String(config.port).padEnd(28)}
      Environment: ${config.nodeEnv.padEnd(28)}
-     Health:      http://localhost:${config.port}/api/health
+     Health:      http://localhost:${config.port}/api/v1/health
 
 
       `);
