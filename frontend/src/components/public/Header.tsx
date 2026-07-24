@@ -12,8 +12,13 @@ export default function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isAuthenticated, user, hydrate, logout } = useAuthStore();
+
+  const toggleCat = (id: string) => {
+    setExpandedCats((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const { data: catRes } = useQuery({
     queryKey: ["public-categories"],
@@ -222,23 +227,39 @@ export default function Header() {
               .filter((c: any) => !c.parentId && !["home", "about", "contact"].includes(c.name.toLowerCase()))
               .map((cat: any) => {
               const children = categories.filter((c: any) => c.parentId === cat.id);
+              const hasChildren = children.length > 0;
+              const isExpanded = expandedCats[cat.id];
               return (
                 <div key={cat.id} className="flex flex-col">
-                  <Link
-                    href={`/category/${cat.slug}`}
-                    className={`px-4 py-3 rounded-lg text-sm font-semibold text-text no-underline ${theme.navLinkInactive}`}
-                  >
-                    {cat.name}
-                  </Link>
-                  {children.map((child: any) => (
-                    <Link
-                      key={child.id}
-                      href={`/category/${child.slug}`}
-                      className={`px-8 py-2 rounded-lg text-sm text-text-secondary no-underline hover:text-primary ${theme.navLinkInactive}`}
+                  {hasChildren ? (
+                    <button
+                      onClick={() => toggleCat(cat.id)}
+                      className={`flex items-center justify-between px-4 py-3 rounded-lg text-sm font-semibold text-text text-left border-none bg-transparent cursor-pointer ${theme.navLinkInactive}`}
                     >
-                      — {child.name}
+                      {cat.name}
+                      <ChevronDown size={16} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180 text-primary' : ''}`} />
+                    </button>
+                  ) : (
+                    <Link
+                      href={`/category/${cat.slug}`}
+                      className={`px-4 py-3 rounded-lg text-sm font-semibold text-text no-underline ${theme.navLinkInactive}`}
+                    >
+                      {cat.name}
                     </Link>
-                  ))}
+                  )}
+                  {hasChildren && isExpanded && (
+                    <div className="flex flex-col animate-fade-in">
+                      {children.map((child: any) => (
+                        <Link
+                          key={child.id}
+                          href={`/category/${child.slug}`}
+                          className={`px-8 py-2 rounded-lg text-sm text-text-secondary no-underline hover:text-primary ${theme.navLinkInactive}`}
+                        >
+                          — {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}

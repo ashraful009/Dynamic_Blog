@@ -130,8 +130,6 @@ export default async function PostPage({ params }: { params: Promise<{ year: str
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <DatumHero settings={settings} />
-
         <div className="w-[90%] lg:w-[80%] max-w-[1600px] mx-auto px-0 py-12 lg:py-16">
           <header className="mb-10 lg:w-[70%] lg:pr-12">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold font-display leading-tight mb-5 text-text">

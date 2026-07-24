@@ -84,18 +84,17 @@ export default function Sidebar({
             <h3 className="text-[13px] font-bold tracking-widest uppercase text-text mb-4 pb-2 border-b-2 border-primary inline-block">
               Categories
             </h3>
-            <ul className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2">
               {categories.filter(c => !c.parentId).map((cat) => (
-                <li key={cat.id} className="border-b border-border/50 last:border-0 pb-2 last:pb-0">
-                  <Link 
-                    href={`/category/${cat.slug}`} 
-                    className="flex items-center justify-between text-[14px] text-text-secondary hover:text-primary transition-colors py-1"
-                  >
-                    <span>{cat.name}</span>
-                  </Link>
-                </li>
+                <Link 
+                  key={cat.id}
+                  href={`/category/${cat.slug}`} 
+                  className="px-3 py-1 text-[13px] font-medium text-text-secondary bg-bg-secondary border border-border hover:border-primary hover:text-primary transition-colors rounded-sm"
+                >
+                  {cat.name}
+                </Link>
               ))}
-            </ul>
+            </div>
           </div>
         )}
 
