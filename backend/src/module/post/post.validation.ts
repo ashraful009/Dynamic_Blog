@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 export const PostValidation = {
   create: z.object({
     body: z.object({
@@ -11,7 +12,7 @@ export const PostValidation = {
         .min(10, "Content must be at least 10 characters"),
       excerpt: z
         .string()
-        .max(500, "Excerpt must not exceed 500 characters")
+        .max(2000, "Excerpt must not exceed 2000 characters")
         .optional(),
       coverImage: z.string().url("Invalid cover image URL").optional(),
       metaTitle: z
@@ -28,6 +29,8 @@ export const PostValidation = {
       readTime: z.number().int().positive().optional(),
       displayOrder: z.number().int().optional(),
       categoryId: z.string().uuid("Invalid category ID").optional().nullable(),
+      categoryIds: z.array(z.string().uuid("Invalid category ID")).optional(),
+      tagIds: z.array(z.string().uuid("Invalid tag ID")).optional(),
     }),
   }),
   update: z.object({
@@ -46,7 +49,7 @@ export const PostValidation = {
         .optional(),
       excerpt: z
         .string()
-        .max(500, "Excerpt must not exceed 500 characters")
+        .max(2000, "Excerpt must not exceed 2000 characters")
         .optional(),
       coverImage: z.string().url("Invalid cover image URL").optional().nullable(),
       metaTitle: z
@@ -65,6 +68,8 @@ export const PostValidation = {
       readTime: z.number().int().positive().optional().nullable(),
       displayOrder: z.number().int().optional().nullable(),
       categoryId: z.string().uuid("Invalid category ID").optional().nullable(),
+      categoryIds: z.array(z.string().uuid("Invalid category ID")).optional(),
+      tagIds: z.array(z.string().uuid("Invalid tag ID")).optional(),
     }),
   }),
   getBySlug: z.object({

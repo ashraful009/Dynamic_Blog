@@ -3,36 +3,6 @@ import jwt from "jsonwebtoken";
 import prisma from "../../db";
 import config from "../../config";
 import { ApiError } from "../../middleware/globalErrorHandler";
-const register = async (data: {
-  name: string;
-  email: string;
-  password: string;
-}) => {
-  const existingUser = await prisma.user.findUnique({
-    where: { email: data.email },
-  });
-  if (existingUser) {
-    throw new ApiError(409, "A user with this email already exists.");
-  }
-  const saltRounds = 12;
-  const hashedPassword = await bcrypt.hash(data.password, saltRounds);
-  const user = await prisma.user.create({
-    data: {
-      name: data.name,
-      email: data.email,
-      password: hashedPassword,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      createdAt: true,
-    },
-  });
-  const token = generateToken(user.id, user.email, user.role);
-  return { user, token };
-};
 const login = async (data: { email: string; password: string }) => {
   const user = await prisma.user.findUnique({
     where: { email: data.email },
@@ -42,6 +12,9 @@ const login = async (data: { email: string; password: string }) => {
   }
   const isPasswordValid = await bcrypt.compare(data.password, user.password);
   if (!isPasswordValid) {
+    throw new ApiError(401, "Invalid email or password.");
+  }
+  if (user.role !== "ADMIN") {
     throw new ApiError(401, "Invalid email or password.");
   }
   const token = generateToken(user.id, user.email, user.role);
@@ -96,7 +69,6 @@ const generateToken = (id: string, email: string, role: string): string => {
   );
 };
 export const UserService = {
-  register,
   login,
   getProfile,
   updateProfile,

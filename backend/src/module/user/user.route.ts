@@ -5,11 +5,6 @@ import validateRequest from "../../middleware/validateRequest";
 import { UserValidation } from "./user.validation";
 const router = Router();
 router.post(
-  "/register",
-  validateRequest(UserValidation.register),
-  UserController.register
-);
-router.post(
   "/login",
   validateRequest(UserValidation.login),
   UserController.login

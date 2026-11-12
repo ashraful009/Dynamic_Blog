@@ -10,6 +10,7 @@ import postRoutes from "./module/post/post.route";
 import mediaRoutes from "./module/media/media.route";
 import siteSettingsRoutes from "./module/site-settings/site-settings.route";
 import categoryRoutes from "./module/category/category.route";
+import tagRoutes from "./module/tag/tag.route";
 import subscriberRoutes from "./module/subscriber/subscriber.route";
 import homepageRoutes from "./module/homepage/homepage.route";
 import aboutRoutes from "./module/about/about.route";
@@ -20,7 +21,13 @@ app.use(helmet());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: config.frontendUrl,
+    origin: (origin, callback) => {
+      if (!origin || config.cors.allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -28,7 +35,7 @@ app.use(
 );
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -40,7 +47,7 @@ const limiter = rateLimit({
 app.use("/api/v1/", limiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -58,6 +65,7 @@ app.use("/api/v1/posts", postRoutes);
 app.use("/api/v1/media", mediaRoutes);
 app.use("/api/v1/site-settings", siteSettingsRoutes);
 app.use("/api/v1/categories", categoryRoutes);
+app.use("/api/v1/tags", tagRoutes);
 app.use("/api/v1/subscribers", subscriberRoutes);
 app.use("/api/v1/homepage", homepageRoutes);
 app.use("/api/v1/about", aboutRoutes);

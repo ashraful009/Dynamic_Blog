@@ -1,3 +1,4 @@
+import fs from "fs";
 import prisma from "../../db";
 import { ApiError } from "../../middleware/globalErrorHandler";
 import { uploadImage, uploadVideo, deleteAsset, UploadResult } from "../../utils/uploadImage";
@@ -11,36 +12,48 @@ const upload = async (
   if (!file) {
     throw new ApiError(400, "No file provided.");
   }
-  let uploadResult: UploadResult;
-  let mediaType: MediaType;
-  if (IMAGE_MIMES.includes(file.mimetype)) {
-    mediaType = "IMAGE";
-    uploadResult = await uploadImage(file.path);
-  } else if (VIDEO_MIMES.includes(file.mimetype)) {
-    mediaType = "VIDEO";
-    uploadResult = await uploadVideo(file.path);
-  } else {
-    throw new ApiError(
-      400,
-      `Unsupported file type: ${file.mimetype}. Supported: ${[...IMAGE_MIMES, ...VIDEO_MIMES].join(", ")}`
-    );
+  try {
+    let uploadResult: UploadResult;
+    let mediaType: MediaType;
+    if (IMAGE_MIMES.includes(file.mimetype)) {
+      mediaType = "IMAGE";
+      uploadResult = await uploadImage(file.path);
+    } else if (VIDEO_MIMES.includes(file.mimetype)) {
+      mediaType = "VIDEO";
+      uploadResult = await uploadVideo(file.path);
+    } else {
+      throw new ApiError(
+        400,
+        `Unsupported file type: ${file.mimetype}. Supported: ${[...IMAGE_MIMES, ...VIDEO_MIMES].join(", ")}`
+      );
+    }
+    const media = await prisma.media.create({
+      data: {
+        publicId: uploadResult.publicId,
+        url: uploadResult.url,
+        secureUrl: uploadResult.secureUrl,
+        format: uploadResult.format,
+        type: mediaType,
+        hlsUrl: uploadResult.hlsUrl || null,
+        width: uploadResult.width,
+        height: uploadResult.height,
+        bytes: uploadResult.bytes,
+        alt: options.alt || null,
+        postId: options.postId || null,
+      },
+    });
+    return media;
+  } finally {
+    if (file?.path) {
+      try {
+        await fs.promises.unlink(file.path);
+      } catch (err: any) {
+        if (err?.code !== "ENOENT") {
+          console.error("Failed to delete temp file:", err);
+        }
+      }
+    }
   }
-  const media = await prisma.media.create({
-    data: {
-      publicId: uploadResult.publicId,
-      url: uploadResult.url,
-      secureUrl: uploadResult.secureUrl,
-      format: uploadResult.format,
-      type: mediaType,
-      hlsUrl: uploadResult.hlsUrl || null,
-      width: uploadResult.width,
-      height: uploadResult.height,
-      bytes: uploadResult.bytes,
-      alt: options.alt || null,
-      postId: options.postId || null,
-    },
-  });
-  return media;
 };
 const getAll = async (options: {
   page?: number;

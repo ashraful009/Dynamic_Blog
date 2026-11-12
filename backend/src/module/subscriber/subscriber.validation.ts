@@ -8,6 +8,13 @@ const subscribeSchema = z.object({
       .email("Invalid email format"),
   }),
 });
+const deleteSubscriberSchema = z.object({
+  params: z.object({
+    id: z.string().uuid("Invalid subscriber ID"),
+  }),
+});
+
 export const SubscriberValidation = {
   subscribe: subscribeSchema,
+  delete: deleteSubscriberSchema,
 };

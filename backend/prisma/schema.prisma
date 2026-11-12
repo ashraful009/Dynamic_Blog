@@ -77,8 +77,13 @@ model Post {
   authorId        String
   author          User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
+  // Primary Category (backward-compatible) + Multi-Categories (M:N)
   categoryId      String?
-  category        Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  category        Category?  @relation("PrimaryCategory", fields: [categoryId], references: [id], onDelete: SetNull)
+  categories      Category[] @relation("PostCategories")
+
+  // Tags (M:N)
+  tags            Tag[]      @relation("PostTags")
 
   media           Media[]
   comments        Comment[]
@@ -133,41 +138,59 @@ model SiteSettings {
   id                String   @id @default("default")
 
   // Header
-  siteName          String   @default("DATUM")
-  navLinks          Json     @default("[]")   // [{label, href}]
+  siteName          String   @default("ফেরদৌস আনাম জীবন")
+  siteSubtitle      String?  @default("লেখালেখি")
+  navLinks          Json     @default("[]")   // [{label, href, children?: [{label, href}]}]
   headerCtaText     String?  @default("Subscribe")
   headerCtaLink     String?  @default("#subscribe")
+  readMoreBtnText   String?  @default("READ MORE")
 
   // Hero
-  heroCoordText     String?
-  heroTitle         String   @db.Text
-  heroSubtitle      String?  @db.Text
+  heroCoordText        String?
+  heroTitle            String   @db.Text
+  heroSubtitle         String?  @db.Text
   heroPrimaryBtnText   String?  @default("Browse the index")
   heroPrimaryBtnLink   String?  @default("#index")
   heroSecondaryBtnText String?  @default("Get new notes by email")
   heroSecondaryBtnLink String?  @default("#subscribe")
-  heroPanelLabel    String?  @default("N 41.203 / E 6.004")
-  heroImage         String?  @db.Text
+  heroPanelLabel       String?  @default("N 41.203 / E 6.004")
+  heroImage            String?  @db.Text
 
   // Newsletter
+  sidebarNewsletterLabel String? @default("নতুন লেখা মেইলে পেতে সাবস্ক্রাইব করুনঃ")
   newsletterTitle       String?  @db.Text
   newsletterSubtitle    String?  @db.Text
-  newsletterPlaceholder String?  @default("your@email.com")
+  newsletterPlaceholder String?  @default("Type your email...")
   newsletterBtnText     String?  @default("Subscribe")
-  newsletterNote        String?  @default("Free. Unsubscribe anytime.")
+  newsletterNote        String?  @default("By subscribing you agree to our Terms of Use and Privacy Policy.")
 
   // Footer
   footerMark        String?
   footerLinks       Json     @default("[]")   // [{label, href}]
 
-  // Sidebar Configuration
-  sidebarAboutImage String?   @db.Text
-  sidebarAboutText  String?   @db.Text
-  sidebarCustomHtml String?   @db.Text        // For Goodreads/Substack iframes
+  // Sidebar Configuration — Author Note / About Widget
+  sidebarAboutTitle    String?
+  sidebarAboutImage    String?   @db.Text
+  sidebarAboutText     String?   @db.Text
+  sidebarAboutLinkText String?   @default("এই লিংক থেকে")
+  sidebarAboutLinkUrl  String?   @default("/category/prokashito-boi")
+  sidebarAboutSignoff  String?   @default("– ফেরদৌস আনাম জীবন")
+
+  // Sidebar Configuration — Goodreads Reading List Widget
+  sidebarGoodreadsTitle String?  @default("গুডরিডসের পড়াশোনা")
+  sidebarGoodreadsBooks Json     @default("[]") // [{title, author, coverUrl, rating, link}]
+
+  // Sidebar Configuration — Section Titles & Counts
+  sidebarRecentTitle     String? @default("সাম্প্রতিক লেখা")
+  sidebarRecentCount     Int     @default(5)
+  sidebarCategoriesTitle String? @default("বিষয় নির্বাচন")
+  sidebarTagsTitle       String? @default("যা নিয়ে লিখছি, যাদের নিয়ে লিখছি")
+  sidebarCustomHtml      String? @db.Text        // Optional custom HTML/iframes
 
   // Widget Toggles
   showSidebarAbout      Boolean @default(true)
   showSidebarNewsletter Boolean @default(true)
+  showSidebarGoodreads  Boolean @default(true)
   showSidebarRecent     Boolean @default(true)
   showSidebarCategories Boolean @default(true)
   showSidebarTags       Boolean @default(true)
@@ -191,23 +214,42 @@ model Subscriber {
 }
 
 // ─────────────────────────────────────────────
-// Category
+// Category (Hierarchical + Multi-Post)
 // ─────────────────────────────────────────────
 
 model Category {
-  id    String @id @default(uuid())
-  name  String @unique
-  slug  String @unique
-  posts Post[]
+  id           String     @id @default(uuid())
+  name         String     @unique
+  slug         String     @unique
+  showInHeader Boolean    @default(false)
 
-  parentId String?
-  parent   Category?  @relation("Subcategories", fields: [parentId], references: [id], onDelete: SetNull)
-  children Category[] @relation("Subcategories")
+  posts        Post[]     @relation("PrimaryCategory")
+  multiPosts   Post[]     @relation("PostCategories")
+
+  parentId     String?
+  parent       Category?  @relation("Subcategories", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Category[] @relation("Subcategories")
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("categories")
+}
+
+// ─────────────────────────────────────────────
+// Tag (Topic / Literary Tag Cloud)
+// ─────────────────────────────────────────────
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  slug      String   @unique
+  posts     Post[]   @relation("PostTags")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("categories")
+  @@map("tags")
 }
 
 // ─────────────────────────────────────────────
@@ -242,8 +284,8 @@ model Comment {
 model AboutPage {
   id              String   @id @default("default")
   
-  name            String   @default("John Doe")
-  designation     String   @default("Developer")
+  name            String   @default("ফেরদৌস আনাম জীবন")
+  designation     String   @default("কথাসাহিত্যিক ও গবেষক")
   phone           String?
   email           String?
   

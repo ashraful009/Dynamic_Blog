@@ -11,7 +11,15 @@ export const MediaValidation = {
   }),
   delete: z.object({
     params: z.object({
-      id: z.string({ required_error: "Media ID is required" }),
+      id: z.string().uuid("Invalid media ID"),
+    }),
+  }),
+  linkToPost: z.object({
+    params: z.object({
+      id: z.string().uuid("Invalid media ID"),
+    }),
+    body: z.object({
+      postId: z.string().uuid("Invalid post ID"),
     }),
   }),
 };

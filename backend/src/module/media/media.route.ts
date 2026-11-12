@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import path from "path";
 import { MediaController } from "./media.controller";
-import { auth } from "../../middleware/auth";
+import { auth, authorize } from "../../middleware/auth";
 import validateRequest from "../../middleware/validateRequest";
 import { MediaValidation } from "./media.validation";
 const router = Router();
@@ -48,19 +48,24 @@ const upload = multer({
 router.post(
   "/upload",
   auth,
+  authorize("ADMIN"),
   upload.single("file"),
+  validateRequest(MediaValidation.upload),
   MediaController.upload
 );
-router.get("/", auth, MediaController.getAll);
+router.get("/", auth, authorize("ADMIN"), MediaController.getAll);
 router.delete(
   "/:id",
   auth,
+  authorize("ADMIN"),
   validateRequest(MediaValidation.delete),
   MediaController.deleteMedia
 );
 router.patch(
   "/:id/link",
   auth,
+  authorize("ADMIN"),
+  validateRequest(MediaValidation.linkToPost),
   MediaController.linkToPost
 );
 export default router;

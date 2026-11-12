@@ -1,10 +1,13 @@
 import { z } from "zod";
+
 const updateSiteSettingsSchema = z.object({
   body: z.object({
     siteName: z.string().optional(),
-    navLinks: z.any().optional(), 
-    headerCtaText: z.string().optional(),
-    headerCtaLink: z.string().optional(),
+    siteSubtitle: z.string().nullable().optional(),
+    navLinks: z.any().optional(),
+    headerCtaText: z.string().nullable().optional(),
+    headerCtaLink: z.string().nullable().optional(),
+    readMoreBtnText: z.string().nullable().optional(),
     heroCoordText: z.string().nullable().optional(),
     heroTitle: z.string().optional(),
     heroSubtitle: z.string().nullable().optional(),
@@ -13,6 +16,8 @@ const updateSiteSettingsSchema = z.object({
     heroSecondaryBtnText: z.string().nullable().optional(),
     heroSecondaryBtnLink: z.string().nullable().optional(),
     heroPanelLabel: z.string().nullable().optional(),
+    heroImage: z.string().nullable().optional(),
+    sidebarNewsletterLabel: z.string().nullable().optional(),
     newsletterTitle: z.string().nullable().optional(),
     newsletterSubtitle: z.string().nullable().optional(),
     newsletterPlaceholder: z.string().nullable().optional(),
@@ -20,18 +25,30 @@ const updateSiteSettingsSchema = z.object({
     newsletterNote: z.string().nullable().optional(),
     footerMark: z.string().nullable().optional(),
     footerLinks: z.any().optional(),
-    
+
     // Sidebar config
+    sidebarAboutTitle: z.string().nullable().optional(),
     sidebarAboutImage: z.string().nullable().optional(),
     sidebarAboutText: z.string().nullable().optional(),
+    sidebarAboutLinkText: z.string().nullable().optional(),
+    sidebarAboutLinkUrl: z.string().nullable().optional(),
+    sidebarAboutSignoff: z.string().nullable().optional(),
+    sidebarGoodreadsTitle: z.string().nullable().optional(),
+    sidebarGoodreadsBooks: z.any().optional(),
+    sidebarRecentTitle: z.string().nullable().optional(),
+    sidebarRecentCount: z.number().int().positive().optional(),
+    sidebarCategoriesTitle: z.string().nullable().optional(),
+    sidebarTagsTitle: z.string().nullable().optional(),
     sidebarCustomHtml: z.string().nullable().optional(),
     showSidebarAbout: z.boolean().optional(),
     showSidebarNewsletter: z.boolean().optional(),
+    showSidebarGoodreads: z.boolean().optional(),
     showSidebarRecent: z.boolean().optional(),
     showSidebarCategories: z.boolean().optional(),
     showSidebarTags: z.boolean().optional(),
   }),
 });
+
 export const SiteSettingsValidation = {
   update: updateSiteSettingsSchema,
 };

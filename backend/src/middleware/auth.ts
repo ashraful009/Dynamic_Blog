@@ -53,7 +53,11 @@ const auth = async (
   }
 };
 const authorize = (...roles: string[]) => {
-  return (req: AuthRequest, _res: Response, next: NextFunction): void => {
+  return function authorize(
+    req: AuthRequest,
+    _res: Response,
+    next: NextFunction
+  ): void {
     if (!req.user) {
       return next(new ApiError(401, "Authentication required."));
     }
