@@ -1,0 +1,148 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════
+   ADMIN THEME CONFIGURATION
+   ═══════════════════════════════════════════════ */
+@theme {
+  /* ── Breakpoints ── */
+  --breakpoint-xs: 375px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  /* ── Admin Colors ── */
+  --color-primary: #f43b27;
+  --color-primary-light: #ff6b5b;
+  --color-primary-dark: #cc2f1e;
+  --color-primary-glow: rgba(244, 59, 39, 0.3);
+  --color-accent: #f43b27;
+  --color-accent-light: #ff6b5b;
+  --color-accent-dark: #cc2f1e;
+  
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f9f9f9;
+  --color-bg-tertiary: #f1f1f1;
+  --color-bg-card: #ffffff;
+  --color-bg-elevated: #ffffff;
+  
+  --color-text: #111111;
+  --color-text-secondary: #4a4a4a;
+  --color-text-muted: #888888;
+  --color-text-accent: #f43b27;
+  
+  --color-border: #e5e5e5;
+  --color-border-light: #f0f0f0;
+  --color-border-active: #f43b27;
+  
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+
+  /* ── Fonts ── */
+  --font-display: 'Noto Sans Bengali', 'Outfit', sans-serif;
+  --font-body: 'Noto Sans Bengali', 'Inter', sans-serif;
+  --font-datum-display: 'Noto Sans Bengali', 'Outfit', sans-serif;
+  --font-datum-body: 'Noto Sans Bengali', 'Inter', sans-serif;
+  --font-datum-mono: monospace;
+
+  /* ── Shadows ── */
+  --shadow-glass: 0 8px 32px rgba(0, 0, 0, 0.05);
+  --shadow-primary: 0 4px 16px rgba(244, 59, 39, 0.25);
+
+  /* ── Animations ── */
+  --animate-fade-in: fade-in 0.4s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════
+   BASE LAYER — Resets & Styles
+   ═══════════════════════════════════════════════ */
+@layer base {
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-text);
+    background: var(--color-bg);
+    line-height: 1.6;
+  }
+
+  img { max-width: 100%; height: auto; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-bg-secondary); }
+  ::-webkit-scrollbar-thumb { background: var(--color-border-light); border-radius: 9999px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+}
+
+/* ═══════════════════════════════════════════════
+   COMPONENT LAYER
+   ═══════════════════════════════════════════════ */
+@layer components {
+  /* ── Spinner ── */
+  .spinner {
+    @apply w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin;
+  }
+  .spinner-lg {
+    @apply w-8 h-8;
+  }
+
+  /* ── ProseMirror Editor Content ── */
+  .ProseMirror {
+    outline: none !important;
+    position: relative;
+    min-height: 297mm;
+    width: 210mm;
+    margin: 0 auto;
+    padding: 25.4mm;
+    font-family: var(--font-body);
+    line-height: 1.7;
+    color: black;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      white 0,
+      white calc(297mm - 20px),
+      transparent calc(297mm - 20px),
+      transparent 297mm
+    );
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+  }
+  .ProseMirror p { margin-top: 0; margin-bottom: 0.5em; }
+  .ProseMirror p:empty { height: 1.5em; margin-bottom: 0; }
+  .ProseMirror h1, .ProseMirror h2, .ProseMirror h3,
+  .ProseMirror h4, .ProseMirror h5, .ProseMirror h6 {
+    margin-top: 1.5em; margin-bottom: 0.5em;
+    font-family: var(--font-display);
+  }
+  .ProseMirror h1 { font-size: 2em; }
+  .ProseMirror h2 { font-size: 1.5em; }
+  .ProseMirror h3 { font-size: 1.25em; }
+  .ProseMirror h4 { font-size: 1.1em; }
+  .ProseMirror a { color: var(--color-primary-light); text-decoration: underline; cursor: pointer; }
+  .ProseMirror a:hover { color: var(--color-accent); }
+  .ProseMirror ul, .ProseMirror ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+  .ProseMirror ul { list-style-type: disc; }
+  .ProseMirror ol { list-style-type: decimal; }
+  .ProseMirror blockquote {
+    border-left: 3px solid var(--color-primary);
+    margin-left: 0; padding-left: 1rem;
+    color: var(--color-text-secondary); font-style: italic;
+  }
+}
+
