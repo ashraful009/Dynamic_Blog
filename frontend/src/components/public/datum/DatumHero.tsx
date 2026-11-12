@@ -1,7 +1,14 @@
 "use client";
 
+interface DatumHeroSettings {
+  heroImage?: string | null;
+  siteName?: string | null;
+  siteSubtitle?: string | null;
+  [key: string]: unknown;
+}
+
 interface DatumHeroProps {
-  settings: Record<string, unknown> | any;
+  settings?: DatumHeroSettings | null;
   archiveLabel?: string;
   pageLabel?: string;
 }

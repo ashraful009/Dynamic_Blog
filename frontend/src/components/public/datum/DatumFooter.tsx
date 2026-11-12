@@ -1,7 +1,19 @@
 "use client";
 import Link from "next/link";
+interface FooterLink {
+  href: string;
+  label: string;
+  [key: string]: unknown;
+}
+
+interface DatumFooterSettings {
+  footerMark?: string | null;
+  footerLinks?: FooterLink[] | null;
+  [key: string]: unknown;
+}
+
 interface DatumFooterProps {
-  settings: Record<string, unknown> | any;
+  settings?: DatumFooterSettings | null;
 }
 export default function DatumFooter({ settings }: DatumFooterProps) {
   return (

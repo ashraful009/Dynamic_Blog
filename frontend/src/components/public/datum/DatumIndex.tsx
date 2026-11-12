@@ -3,8 +3,19 @@ import Link from "next/link";
 import { Eye } from "lucide-react";
 import Image from "next/image";
 import { getPostUrl } from "@/utils/postUrl";
+interface DatumIndexPost {
+  id: string;
+  slug: string;
+  title: string;
+  publishedAt?: string;
+  createdAt?: string;
+  views?: number;
+  coverImage?: string | null;
+  [key: string]: unknown;
+}
+
 interface DatumIndexProps {
-  posts: Record<string, unknown>[] | any[];
+  posts?: DatumIndexPost[] | null;
 }
 export default function DatumIndex({ posts }: DatumIndexProps) {
   if (!posts || posts.length === 0) return null;

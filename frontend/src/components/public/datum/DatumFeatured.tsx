@@ -2,8 +2,20 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getPostUrl } from "@/utils/postUrl";
+interface DatumFeaturedPost {
+  slug: string;
+  title: string;
+  excerpt?: string;
+  coverImage?: string | null;
+  readTime?: number | string | null;
+  createdAt?: string;
+  publishedAt?: string;
+  category?: { name: string; slug?: string } | null;
+  [key: string]: unknown;
+}
+
 interface DatumFeaturedProps {
-  post: Record<string, unknown> | any;
+  post: DatumFeaturedPost;
 }
 export default function DatumFeatured({ post }: DatumFeaturedProps) {
   if (!post) return null;

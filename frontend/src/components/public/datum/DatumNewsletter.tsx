@@ -3,8 +3,17 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { subscribersApi } from "@/lib/api";
 import toast from "react-hot-toast";
+interface DatumNewsletterSettings {
+  newsletterTitle?: string | null;
+  newsletterSubtitle?: string | null;
+  newsletterPlaceholder?: string | null;
+  newsletterBtnText?: string | null;
+  newsletterNote?: string | null;
+  [key: string]: unknown;
+}
+
 interface DatumNewsletterProps {
-  settings: Record<string, unknown> | any;
+  settings?: DatumNewsletterSettings | null;
 }
 export default function DatumNewsletter({ settings }: DatumNewsletterProps) {
   const [email, setEmail] = useState("");
