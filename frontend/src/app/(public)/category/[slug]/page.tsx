@@ -1,92 +1,154 @@
-import { Metadata, ResolvingMetadata } from "next";
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
-import DatumIndex from "@/components/public/datum/DatumIndex";
+import DatumHero from "@/components/public/datum/DatumHero";
+import PostFeed from "@/components/public/feed/PostFeed";
+import Sidebar from "@/components/public/sidebar/Sidebar";
 
-async function getCategoryData(slug: string) {
+export const dynamic = "force-dynamic";
+
+async function getCategoryPageData(slug: string, page: number) {
   try {
-    const [catRes, postsRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1"}/categories`, { next: { revalidate: 60 } }),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1"}/posts?categorySlug=${slug}&limit=20`, { next: { revalidate: 60 } })
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    const decodedSlug = decodeURIComponent(slug);
+
+    const [homeRes, postsRes] = await Promise.all([
+      fetch(`${apiUrl}/homepage`, { cache: "no-store" }),
+      fetch(
+        `${apiUrl}/posts?categorySlug=${encodeURIComponent(
+          decodedSlug
+        )}&page=${page}&limit=5`,
+        { cache: "no-store" }
+      ),
     ]);
-    let category = null;
-    if (catRes.ok) {
-      const catJson = await catRes.json();
-      const findCat = (cats: any[]): any => {
-        for (const c of cats) {
-          if (c.slug === slug) return c;
-          if (c.children) {
-            const found = findCat(c.children);
-            if (found) return found;
-          }
+
+    if (!homeRes.ok) return null;
+    const homeJson = await homeRes.json();
+    const homeData = homeJson.data || {};
+    const categories = homeData.categories || [];
+
+    const normalizeSlug = (s: string) => {
+      try {
+        return decodeURIComponent(s).normalize("NFC").trim();
+      } catch {
+        return s.normalize("NFC").trim();
+      }
+    };
+
+    const targetSlug = normalizeSlug(decodedSlug);
+
+    const findCat = (cats: any[]): any => {
+      for (const c of cats) {
+        if (
+          normalizeSlug(c.slug) === targetSlug ||
+          c.slug === decodedSlug ||
+          c.slug === slug
+        ) {
+          return c;
         }
-        return null;
-      };
-      category = findCat(catJson.data || []);
-    }
+        if (c.children) {
+          const found = findCat(c.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    const category = findCat(categories);
     if (!category) return null;
+
     let posts = [];
+    let meta = { page: 1, limit: 5, total: 0, totalPages: 1 };
     if (postsRes.ok) {
       const postsJson = await postsRes.json();
       posts = postsJson.data || [];
+      if (postsJson.meta) {
+        meta = postsJson.meta;
+      }
     }
-    return { category, posts };
+
+    return {
+      category,
+      posts,
+      meta,
+      settings: homeData.settings || {},
+      categories,
+      sidebarRecentPosts: homeData.sidebarRecentPosts || homeData.recentPosts || [],
+      tags: homeData.tags || [],
+    };
   } catch (error) {
     console.error("Error fetching category data:", error);
     return null;
   }
 }
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ slug: string }> },
-  parent: ResolvingMetadata
-): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
-  const data = await getCategoryData(slug);
+  const data = await getCategoryPageData(slug, 1);
   if (!data) {
     return { title: "Category Not Found" };
   }
+  const siteName = data.settings?.siteName || "ফেরদৌস আনাম জীবন";
   return {
-    title: `${data.category.name} - Zibon Vlog`,
-    description: `Posts in category ${data.category.name}`,
+    title: `${data.category.name} – ${siteName}`,
+    description: `${data.category.name} বিষয়ক সকল লেখা`,
   };
 }
 
-export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ page?: string }>;
+}) {
   const { slug } = await params;
-  const data = await getCategoryData(slug);
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp?.page || "1", 10) || 1);
+
+  const data = await getCategoryPageData(slug, page);
   if (!data) {
     notFound();
   }
-  const { category, posts } = data;
+
+  const {
+    category,
+    posts,
+    meta,
+    settings,
+    categories,
+    sidebarRecentPosts,
+    tags,
+  } = data;
+
+  const totalPages = Math.max(1, meta.totalPages || 1);
+
   return (
-    <div className="max-w-[1200px] mx-auto px-6 py-10">
-      <header className="mb-10 pb-6 border-b border-border">
-        <div className="flex items-center gap-2 mb-2">
-          <Link href="/" className="text-primary-light hover:text-primary transition-colors no-underline text-sm font-medium">
-            Home
-          </Link>
-          <span className="text-text-muted text-sm">/</span>
-          <span className="text-text-secondary text-sm">Category</span>
-        </div>
-        <h1 className="font-datum-display text-4xl text-text font-extrabold m-0">
-          {category.name}
-        </h1>
-        <p className="text-text-secondary mt-2 text-base m-0">
-          Browsing all published posts in {category.name}.
-        </p>
-      </header>
-      {posts.length > 0 ? (
-        <DatumIndex posts={posts} />
-      ) : (
-        <div className="py-16 text-center bg-bg-secondary rounded-xl border border-dashed border-border">
-          <h2 className="text-xl text-text font-bold mb-2">No posts found</h2>
-          <p className="text-text-secondary mb-5">There are currently no published posts in this category.</p>
-          <Link href="/" className="inline-block px-6 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors no-underline">
-            Return Home
-          </Link>
-        </div>
-      )}
+    <div className="bg-[#f2f2f2] min-h-screen">
+      <DatumHero
+        settings={settings}
+        archiveLabel={`CATEGORY: ${category.name}`}
+        pageLabel={`PAGE ${meta.page} OF ${totalPages}`}
+      />
+
+      <div className="w-[92%] lg:w-[82%] max-w-[1240px] mx-auto px-0 grid grid-cols-1 lg:grid-cols-[68%_32%] gap-8 lg:gap-10 py-10 lg:py-14">
+        <PostFeed
+          posts={posts}
+          readMoreText={settings?.readMoreBtnText || "READ MORE"}
+          pagination={meta}
+          basePath={`/category/${category.slug}`}
+        />
+        <Sidebar
+          settings={settings}
+          categories={categories}
+          recentPosts={sidebarRecentPosts}
+          tags={tags}
+        />
+      </div>
     </div>
   );
 }

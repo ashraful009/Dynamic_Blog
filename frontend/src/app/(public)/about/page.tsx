@@ -82,7 +82,7 @@ export default async function AboutPage() {
               <div className="prose prose-lg max-w-none text-text-secondary leading-relaxed mb-16 relative">
                 {/* Decorative quote mark */}
                 <span className="absolute -top-10 -left-6 text-8xl text-border/40 font-serif leading-none hidden md:block">
-                  "
+                  &quot;
                 </span>
                 {data.biography.split('\n').map((paragraph: string, i: number) => (
                   paragraph.trim() ? <p key={i} className="mb-4">{paragraph}</p> : null
@@ -130,7 +130,7 @@ export default async function AboutPage() {
             <div className="mt-24 pt-16 border-t border-border/50">
               <h3 className="text-sm uppercase tracking-widest text-text-muted font-semibold mb-12 text-center">Expertise</h3>
               <div className="flex flex-wrap justify-center gap-8 md:gap-12 lg:gap-16">
-                {data.skills.map((skill: any, i: number) => (
+                {data.skills.map((skill: { name: string; percentage: number }, i: number) => (
                   <CircularSkillBar key={i} name={skill.name} percentage={skill.percentage} />
                 ))}
               </div>

@@ -2,10 +2,14 @@ import DatumHero from "@/components/public/datum/DatumHero";
 import DatumFooter from "@/components/public/datum/DatumFooter";
 import PostFeed from "@/components/public/feed/PostFeed";
 import Sidebar from "@/components/public/sidebar/Sidebar";
+
 export const dynamic = "force-dynamic";
-async function getHomepageData() {
+
+async function getHomepageData(page: number) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "https://zibon-blog.onrender.com/api/v1"}/homepage`, {
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    const res = await fetch(`${apiUrl}/homepage?page=${page}&limit=5`, {
       cache: "no-store",
     });
     if (!res.ok) throw new Error("Failed to fetch");
@@ -16,20 +20,40 @@ async function getHomepageData() {
     return null;
   }
 }
-export default async function Homepage() {
-  const data = await getHomepageData();
+
+export default async function Homepage({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const sp = await searchParams;
+  const page = Math.max(1, parseInt(sp?.page || "1", 10) || 1);
+  const data = await getHomepageData(page);
+
   const settings = data?.settings || {};
-  const featuredPost = data?.featuredPost || null;
   const recentPosts = data?.recentPosts || [];
+  const sidebarRecentPosts = data?.sidebarRecentPosts || recentPosts;
+  const pagination = data?.pagination;
   const categories = data?.categories || [];
+  const tags = data?.tags || [];
 
   return (
     <>
-      <main>
+      <main className="bg-[#f2f2f2] min-h-screen">
         <DatumHero settings={settings} />
-        <div className="w-[90%] lg:w-[80%] max-w-[1600px] mx-auto px-0 grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-12 py-12 lg:py-16">
-          <PostFeed posts={recentPosts} />
-          <Sidebar settings={settings} categories={categories} recentPosts={recentPosts} />
+        <div className="w-[92%] lg:w-[82%] max-w-[1240px] mx-auto px-0 grid grid-cols-1 lg:grid-cols-[68%_32%] gap-8 lg:gap-10 py-10 lg:py-14">
+          <PostFeed
+            posts={recentPosts}
+            readMoreText={settings?.readMoreBtnText || "READ MORE"}
+            pagination={pagination}
+            basePath="/"
+          />
+          <Sidebar
+            settings={settings}
+            categories={categories}
+            recentPosts={sidebarRecentPosts}
+            tags={tags}
+          />
         </div>
       </main>
       <DatumFooter settings={settings} />
