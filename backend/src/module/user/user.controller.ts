@@ -1,17 +1,22 @@
-import { Request, Response } from "express";
+import { Request, Response, CookieOptions } from "express";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../response/sendResponse";
 import { UserService } from "./user.service";
 import { AuthRequest } from "../../middleware/auth";
 import config from "../../config";
 
+const cookieOptions: CookieOptions = {
+  httpOnly: true,
+  secure: config.nodeEnv === "production",
+  sameSite: "strict",
+  path: "/",
+};
+
 const login = catchAsync(async (req: Request, res: Response) => {
   const { user, token } = await UserService.login(req.body);
   res.cookie("token", token, {
-    httpOnly: true,
-    secure: config.nodeEnv === "production",
-    sameSite: config.nodeEnv === "production" ? "none" : "lax",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    ...cookieOptions,
+    maxAge: 24 * 60 * 60 * 1000,
   });
   sendResponse(res, {
     statusCode: 200,
@@ -22,7 +27,7 @@ const login = catchAsync(async (req: Request, res: Response) => {
 });
 
 const logout = catchAsync(async (req: Request, res: Response) => {
-  res.clearCookie("token");
+  res.clearCookie("token", cookieOptions);
   sendResponse(res, {
     statusCode: 200,
     success: true,

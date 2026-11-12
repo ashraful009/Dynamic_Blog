@@ -23,7 +23,7 @@ const config = {
   },
   jwt: {
     secret: process.env.JWT_SECRET as string,
-    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+    expiresIn: process.env.JWT_EXPIRES_IN || "1d",
   },
   cloudinary: {
     cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,

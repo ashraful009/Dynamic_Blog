@@ -1,4 +1,4 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -17,6 +17,8 @@ import aboutRoutes from "./module/about/about.route";
 import commentRoutes from "./module/comment/comment.route";
 
 const app: Application = express();
+app.set("trust proxy", 1);
+
 app.use(helmet());
 app.use(cookieParser());
 app.use(
@@ -33,6 +35,22 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// CSRF Defense middleware for state-changing requests
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+    const origin = req.headers.origin;
+    if (origin && !config.cors.allowedOrigins.includes(origin)) {
+      res.status(403).json({
+        success: false,
+        statusCode: 403,
+        message: "Forbidden: Invalid request origin",
+      });
+      return;
+    }
+  }
+  next();
+});
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 500,
