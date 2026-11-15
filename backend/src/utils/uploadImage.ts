@@ -32,7 +32,7 @@ export const uploadImage = async (
     });
     return {
       publicId: result.public_id,
-      url: result.url,
+      url: result.secure_url,
       secureUrl: result.secure_url,
       format: result.format,
       width: result.width,
@@ -71,7 +71,7 @@ export const uploadVideo = async (
     });
     return {
       publicId: result.public_id,
-      url: result.url,
+      url: result.secure_url,
       secureUrl: result.secure_url,
       format: result.format,
       width: result.width,

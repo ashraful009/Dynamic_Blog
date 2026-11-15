@@ -78,10 +78,10 @@ jobs:
 
           rsync -az --delete -e "$RSYNC_RSH" frontend/.next/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/frontend/.next/"
           rsync -az --delete -e "$RSYNC_RSH" frontend/public/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/frontend/public/"
-          rsync -az -e "$RSYNC_RSH" frontend/package.json frontend/package-lock.json "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/frontend/"
+          rsync -az -e "$RSYNC_RSH" frontend/package.json frontend/package-lock.json frontend/next.config.ts "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/frontend/"
 
           rsync -az --delete -e "$RSYNC_RSH" admin/.next/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/admin/.next/"
-          rsync -az -e "$RSYNC_RSH" admin/package.json admin/package-lock.json "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/admin/"
+          rsync -az -e "$RSYNC_RSH" admin/package.json admin/package-lock.json admin/next.config.ts "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/admin/"
 
       - name: Install prod deps with pnpm & reload PM2 on VPS
         if: steps.check_secrets.outputs.ready == 'true'
