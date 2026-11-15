@@ -3,7 +3,16 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { AlignLeft, AlignRight, AlignCenter } from "lucide-react";
 export default function ResizableImageComponent(props: any) {
   const { node, updateAttributes, selected } = props;
-  const { src, alt, width = 320, height = 320, float, transformX = 0, transformY = 0 } = node.attrs;
+  const {
+    src,
+    alt,
+    width = 640,
+    height = 360,
+    aspectRatio,
+    float,
+    transformX = 0,
+    transformY = 0,
+  } = node.attrs;
   const [isResizing, setIsResizing] = useState(false);
   const [activeHandle, setActiveHandle] = useState("");
   const imgRef = useRef<HTMLImageElement>(null);
@@ -30,17 +39,33 @@ export default function ResizableImageComponent(props: any) {
     const dy = e.clientY - startPos.current.y;
     let newWidth = startPos.current.w;
     let newHeight = startPos.current.h;
-    if (activeHandle.includes("r")) newWidth += dx;
-    if (activeHandle.includes("l")) newWidth -= dx;
-    if (activeHandle.includes("b")) newHeight += dy;
-    if (activeHandle.includes("t")) newHeight -= dy;
-    newWidth = Math.max(50, newWidth);
-    newHeight = Math.max(50, newHeight);
+
+    if (aspectRatio === "16/9") {
+      if (activeHandle === "t" || activeHandle === "b") {
+        if (activeHandle === "b") newHeight += dy;
+        if (activeHandle === "t") newHeight -= dy;
+        newHeight = Math.max(90, Math.round(newHeight));
+        newWidth = Math.round((newHeight * 16) / 9);
+      } else {
+        if (activeHandle.includes("r")) newWidth += dx;
+        if (activeHandle.includes("l")) newWidth -= dx;
+        newWidth = Math.max(160, Math.round(newWidth));
+        newHeight = Math.round((newWidth * 9) / 16);
+      }
+    } else {
+      if (activeHandle.includes("r")) newWidth += dx;
+      if (activeHandle.includes("l")) newWidth -= dx;
+      if (activeHandle.includes("b")) newHeight += dy;
+      if (activeHandle.includes("t")) newHeight -= dy;
+      newWidth = Math.max(50, Math.round(newWidth));
+      newHeight = Math.max(50, Math.round(newHeight));
+    }
+
     updateAttributes({
       width: newWidth,
       height: newHeight,
     });
-  }, [isResizing, activeHandle, updateAttributes]);
+  }, [isResizing, activeHandle, aspectRatio, updateAttributes]);
   const handleMouseUp = useCallback(() => {
     setIsResizing(false);
     setActiveHandle("");
@@ -94,6 +119,7 @@ export default function ResizableImageComponent(props: any) {
         float: float === "none" ? undefined : float,
         display: "inline-block",
         width: "fit-content",
+        maxWidth: "100%",
         position: "relative",
         transform: "none",
         marginLeft: float === "none" ? "4px" : float === "left" ? `${Math.max(0, transformX)}px` : `20px`,
@@ -114,13 +140,24 @@ export default function ResizableImageComponent(props: any) {
         width={width}
         height={height}
         draggable={false}
-        style={{
-          width: width ? `${width}px` : "320px",
-          height: height ? `${height}px` : "320px",
-          objectFit: "fill",
-          maxWidth: "100%",
-          display: "block",
-        }}
+        style={
+          aspectRatio
+            ? {
+                width: width ? `${width}px` : "100%",
+                height: "auto",
+                aspectRatio: "16 / 9",
+                objectFit: "cover",
+                maxWidth: "100%",
+                display: "block",
+              }
+            : {
+                width: width ? `${width}px` : "320px",
+                height: height ? `${height}px` : "320px",
+                objectFit: "cover",
+                maxWidth: "100%",
+                display: "block",
+              }
+        }
       />
       <div className="media-float-controls" contentEditable={false}>
         <button

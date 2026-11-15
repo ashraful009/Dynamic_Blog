@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+Bengali:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap');
+@import url('https://fonts.maateen.me/kalpurush/font.css');
+@import url('https://fonts.maateen.me/siyam-rupali/font.css');
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════
@@ -107,21 +109,14 @@
   .ProseMirror {
     outline: none !important;
     position: relative;
-    min-height: 297mm;
-    width: 210mm;
-    margin: 0 auto;
-    padding: 25.4mm;
+    width: 100%;
+    max-width: 100%;
+    min-height: 500px;
+    padding: 24px 28px;
+    background: white;
     font-family: var(--font-body);
     line-height: 1.7;
     color: black;
-    background-image: repeating-linear-gradient(
-      to bottom,
-      white 0,
-      white calc(297mm - 20px),
-      transparent calc(297mm - 20px),
-      transparent 297mm
-    );
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
   }
   .ProseMirror p { margin-top: 0; margin-bottom: 0.5em; }
   .ProseMirror p:empty { height: 1.5em; margin-bottom: 0; }
@@ -143,6 +138,143 @@
     border-left: 3px solid var(--color-primary);
     margin-left: 0; padding-left: 1rem;
     color: var(--color-text-secondary); font-style: italic;
+  }
+
+  /* ── Media Resizer & Float Controls ── */
+  .media-wrapper {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    user-select: none;
+  }
+  .media-wrapper.selected {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  .media-float-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: none;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    z-index: 30;
+  }
+  .media-wrapper:hover .media-float-controls,
+  .media-wrapper.selected .media-float-controls {
+    display: flex;
+  }
+  .media-float-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+  .media-float-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+  }
+  .media-float-btn.active {
+    background: var(--color-primary);
+    color: #ffffff;
+  }
+  .media-resizer {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #ffffff;
+    border: 2px solid var(--color-primary);
+    border-radius: 2px;
+    z-index: 30;
+  }
+  .media-resizer.top-left {
+    top: -5px;
+    left: -5px;
+    cursor: nwse-resize;
+  }
+  .media-resizer.top-right {
+    top: -5px;
+    right: -5px;
+    cursor: nesw-resize;
+  }
+  .media-resizer.bottom-left {
+    bottom: -5px;
+    left: -5px;
+    cursor: nesw-resize;
+  }
+  .media-resizer.bottom-right {
+    bottom: -5px;
+    right: -5px;
+    cursor: nwse-resize;
+  }
+
+  /* ── PDF Embed Viewer ── */
+  .pdf-embed-editor {
+    margin: 1rem 0;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-card);
+    overflow: hidden;
+  }
+  .pdf-embed-editor.selected {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+  .pdf-embed-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-bg-elevated);
+  }
+  .pdf-embed {
+    width: 100%;
+    max-width: 100%;
+    aspect-ratio: 9 / 16;
+    max-height: 85vh;
+    overflow: auto;
+    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+  }
+  .pdf-embed-editor .pdf-embed {
+    border: none;
+    border-radius: 0;
+  }
+  .pdf-embed-frame {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    border: none;
+    display: block;
+  }
+  .pdf-embed-fallback {
+    padding: 8px 12px;
+    font-size: 12px;
+    text-align: right;
+    border-top: 1px solid var(--color-border);
+    background: #f1f5f9;
+  }
+  .pdf-embed-fallback a {
+    color: var(--color-primary);
+    text-decoration: underline;
   }
 }
 

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `media` MODIFY COLUMN `type` ENUM('IMAGE', 'VIDEO', 'PDF') NOT NULL;

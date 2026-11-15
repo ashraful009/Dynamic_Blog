@@ -26,6 +26,7 @@ enum PostStatus {
 enum MediaType {
   IMAGE
   VIDEO
+  PDF
 }
 
 // ─────────────────────────────────────────────
@@ -222,6 +223,8 @@ model Category {
   name         String     @unique
   slug         String     @unique
   showInHeader Boolean    @default(false)
+  displayOrder Int        @default(0)
+  isSystem     Boolean    @default(false)
 
   posts        Post[]     @relation("PrimaryCategory")
   multiPosts   Post[]     @relation("PostCategories")

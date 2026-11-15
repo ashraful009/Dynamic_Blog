@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { mediaApi } from "@/lib/api";
-import { X, Upload, Image as ImageIcon, Film } from "lucide-react";
+import { X, Upload, Image as ImageIcon, Film, FileText } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface EditorMediaModalProps {
@@ -18,10 +18,15 @@ export default function EditorMediaModal({
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"library" | "upload">("library");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "IMAGE" | "VIDEO" | "PDF">("ALL");
 
   const { data: mediaData, isLoading } = useQuery({
-    queryKey: ["admin-media-editor"],
-    queryFn: () => mediaApi.getAll({ limit: 50 }),
+    queryKey: ["admin-media-editor", typeFilter],
+    queryFn: () =>
+      mediaApi.getAll({
+        limit: 50,
+        type: typeFilter === "ALL" ? undefined : typeFilter,
+      }),
     enabled: isOpen && activeTab === "library",
     select: (res) => res.data,
   });
@@ -31,7 +36,12 @@ export default function EditorMediaModal({
     onSuccess: (res) => {
       toast.success("Upload complete!");
       const item = res.data.data;
-      onSelect({ url: item.secureUrl, type: item.type, alt: item.alt });
+      const httpsUrl =
+        item.secureUrl ||
+        (typeof item.url === "string"
+          ? item.url.replace(/^http:\/\//i, "https://")
+          : item.url);
+      onSelect({ url: httpsUrl, type: item.type, alt: item.alt });
       onClose();
       queryClient.invalidateQueries({ queryKey: ["admin-media-editor"] });
       queryClient.invalidateQueries({ queryKey: ["admin-media"] });
@@ -85,6 +95,22 @@ export default function EditorMediaModal({
         <div className="flex-1 overflow-y-auto p-5 bg-bg-card/20">
           {activeTab === "library" && (
             <>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {(["ALL", "IMAGE", "VIDEO", "PDF"] as const).map((filter) => (
+                  <button
+                    key={filter}
+                    type="button"
+                    onClick={() => setTypeFilter(filter)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border cursor-pointer ${
+                      typeFilter === filter
+                        ? "bg-primary text-white border-primary"
+                        : "bg-bg-tertiary text-text-secondary border-border hover:text-text"
+                    }`}
+                  >
+                    {filter === "ALL" ? "All" : filter === "PDF" ? "PDFs" : `${filter.charAt(0)}${filter.slice(1).toLowerCase()}s`}
+                  </button>
+                ))}
+              </div>
               {isLoading ? (
                 <div className="p-10 text-center">
                   <div className="spinner mx-auto" />
@@ -99,13 +125,18 @@ export default function EditorMediaModal({
                     <div
                       key={item.id}
                       className="h-[120px] bg-bg-tertiary rounded-lg overflow-hidden relative cursor-pointer border border-border hover:-translate-y-0.5 hover:shadow-glass-hover transition-all"
-                      onClick={() =>
+                      onClick={() => {
+                        const httpsUrl =
+                          item.secureUrl ||
+                          (typeof item.url === "string"
+                            ? item.url.replace(/^http:\/\//i, "https://")
+                            : item.url);
                         onSelect({
-                          url: item.secureUrl,
+                          url: httpsUrl,
                           type: item.type,
                           alt: item.alt,
-                        })
-                      }
+                        });
+                      }}
                     >
                       {item.type === "IMAGE" ? (
                         <img
@@ -113,6 +144,13 @@ export default function EditorMediaModal({
                           alt={item.alt || ""}
                           className="w-full h-full object-cover"
                         />
+                      ) : item.type === "PDF" ? (
+                        <div className="flex flex-col items-center justify-center h-full px-2 text-center text-text-secondary gap-1.5">
+                          <FileText size={28} className="text-primary" />
+                          <span className="text-[11px] font-medium line-clamp-2 break-all">
+                            {item.alt || item.publicId?.split("/").pop() || "PDF Document"}
+                          </span>
+                        </div>
                       ) : (
                         <div className="flex items-center justify-center h-full text-text-muted">
                           <Film size={32} />
@@ -136,12 +174,12 @@ export default function EditorMediaModal({
                   <Upload size={48} className="text-text-muted mb-4" />
                   <h3 className="text-lg font-semibold mb-2 text-text">Drag & Drop or Select File</h3>
                   <p className="text-sm text-text-muted mb-6">
-                    Supports images and videos (max 100MB)
+                    Supports images, videos, and PDFs (max 100MB)
                   </p>
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*,video/*"
+                    accept="image/*,video/*,application/pdf"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];

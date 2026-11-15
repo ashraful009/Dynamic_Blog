@@ -36,7 +36,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src 'self' fonts.gstatic.com; img-src 'self' data: https: http:; media-src 'self' https: http:; connect-src 'self' http: https: ws: wss:; frame-src 'self' https://vercel.live;"
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live; style-src 'self' 'unsafe-inline' fonts.googleapis.com https://fonts.maateen.me; font-src 'self' fonts.gstatic.com https://fonts.maateen.me; img-src 'self' data: https: http: https://i.ytimg.com; media-src 'self' https: http:; connect-src 'self' http: https: ws: wss: https://res.cloudinary.com; frame-src 'self' https://vercel.live https://res.cloudinary.com https://www.youtube-nocookie.com https://www.youtube.com; child-src 'self' https://vercel.live https://res.cloudinary.com https://www.youtube-nocookie.com https://www.youtube.com;"
           }
         ],
       },

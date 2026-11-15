@@ -4,6 +4,29 @@ import crypto from "crypto";
 import { sanitizeHtml, stripHtml } from "../../utils/sanitize";
 import { PostStatus } from "@prisma/client";
 import { slugify } from "../../utils/slugify";
+import { SYSTEM_HOME_CATEGORY_SLUG } from "../../constants/category";
+
+const getHomeCategoryFilter = async () => {
+  const homeCategory = await prisma.category.findFirst({
+    where: {
+      OR: [{ isSystem: true }, { slug: SYSTEM_HOME_CATEGORY_SLUG }],
+    },
+    include: { children: { select: { id: true } } },
+  });
+  if (!homeCategory) {
+    return null;
+  }
+  const categoryIds = [
+    homeCategory.id,
+    ...homeCategory.children.map((c) => c.id),
+  ];
+  return {
+    OR: [
+      { categoryId: { in: categoryIds } },
+      { categories: { some: { id: { in: categoryIds } } } },
+    ],
+  };
+};
 
 const createPost = async (
   authorId: string,
@@ -115,11 +138,20 @@ const getAllPublished = async (options: {
   search?: string;
   categorySlug?: string;
   tagSlug?: string;
+  homeOnly?: boolean;
 }) => {
   const page = options.page || 1;
   const limit = options.limit || 10;
   const skip = (page - 1) * limit;
   const andConditions: any[] = [{ status: "PUBLISHED" as PostStatus }];
+
+  if (options.homeOnly) {
+    const homeFilter = await getHomeCategoryFilter();
+    if (!homeFilter) {
+      return { data: [], meta: { page, limit, total: 0, totalPages: 0 } };
+    }
+    andConditions.push(homeFilter);
+  }
 
   if (options.search) {
     andConditions.push({
@@ -173,6 +205,7 @@ const getAllPublished = async (options: {
         title: true,
         slug: true,
         excerpt: true,
+        content: true,
         coverImage: true,
         status: true,
         readTime: true,
@@ -208,9 +241,17 @@ const getAllPublished = async (options: {
   };
 };
 
-const getFeatured = async () => {
+const getFeatured = async (options?: { homeOnly?: boolean }) => {
+  let where: any = { status: "PUBLISHED" as PostStatus };
+  if (options?.homeOnly) {
+    const homeFilter = await getHomeCategoryFilter();
+    if (!homeFilter) {
+      return null;
+    }
+    where = { AND: [{ status: "PUBLISHED" as PostStatus }, homeFilter] };
+  }
   const post = await prisma.post.findFirst({
-    where: { status: "PUBLISHED" },
+    where,
     include: {
       author: {
         select: { id: true, name: true, avatar: true },
@@ -230,19 +271,35 @@ const getFeatured = async () => {
   return post;
 };
 
-const getRecentIndex = async (options: { page?: number; limit?: number }) => {
+const getRecentIndex = async (options: {
+  page?: number;
+  limit?: number;
+  homeOnly?: boolean;
+}) => {
   const page = options.page || 1;
   const limit = options.limit || 10;
   const skip = (page - 1) * limit;
+  let where: any = { status: "PUBLISHED" as PostStatus };
+  if (options.homeOnly) {
+    const homeFilter = await getHomeCategoryFilter();
+    if (!homeFilter) {
+      return {
+        data: [],
+        meta: { page, limit, total: 0, totalPages: 0 },
+      };
+    }
+    where = { AND: [{ status: "PUBLISHED" as PostStatus }, homeFilter] };
+  }
   const [total, posts] = await Promise.all([
-    prisma.post.count({ where: { status: "PUBLISHED" } }),
+    prisma.post.count({ where }),
     prisma.post.findMany({
-      where: { status: "PUBLISHED" },
+      where,
       select: {
         id: true,
         title: true,
         slug: true,
         excerpt: true,
+        content: true,
         coverImage: true,
         readTime: true,
         displayOrder: true,
@@ -299,6 +356,7 @@ const getAllForAdmin = async (
         title: true,
         slug: true,
         excerpt: true,
+        content: true,
         coverImage: true,
         status: true,
         publishedAt: true,
@@ -507,12 +565,21 @@ const deletePost = async (id: string, authorId: string, role?: string) => {
   return { id };
 };
 
+const countHomePublished = async () => {
+  const homeFilter = await getHomeCategoryFilter();
+  if (!homeFilter) return 0;
+  return prisma.post.count({
+    where: { AND: [{ status: "PUBLISHED" as PostStatus }, homeFilter] },
+  });
+};
+
 export const PostService = {
   createPost,
   getAllPublished,
   getAllForAdmin,
   getFeatured,
   getRecentIndex,
+  countHomePublished,
   getBySlug,
   getById,
   updatePost,

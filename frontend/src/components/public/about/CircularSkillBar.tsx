@@ -67,7 +67,7 @@ export default function CircularSkillBar({ name, percentage }: CircularSkillBarP
       >
         {/* Background Circle */}
         <circle
-          stroke="#e5e7eb"
+          stroke="var(--color-line)"
           fill="transparent"
           strokeWidth={strokeWidth}
           r={normalizedRadius}
@@ -76,7 +76,7 @@ export default function CircularSkillBar({ name, percentage }: CircularSkillBarP
         />
         {/* Progress Circle */}
         <circle
-          stroke="#1f2937"
+          stroke="var(--color-link)"
           fill="transparent"
           strokeWidth={strokeWidth}
           strokeDasharray={circumference + " " + circumference}
@@ -90,10 +90,10 @@ export default function CircularSkillBar({ name, percentage }: CircularSkillBarP
       
       {/* Inner Content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
-        <span className="text-[11px] uppercase tracking-wider font-semibold text-text-muted mb-1 max-w-[70%] leading-tight group-hover:text-primary transition-colors">
+        <span className="text-meta uppercase tracking-wider font-semibold text-muted mb-1 max-w-[70%] leading-tight group-hover:text-link-hover transition-colors">
           {name}
         </span>
-        <span className="text-xl font-display font-light text-text-secondary">
+        <span className="text-xl font-display font-light text-heading">
           {currentPercentage}%
         </span>
       </div>

@@ -40,12 +40,23 @@ export const ResizableVideo = Node.create<ResizableVideoOptions>({
       },
       transformX: {
         default: 0,
-        parseHTML: (element) => Number(element.getAttribute("data-transform-x")) || 0,
+        parseHTML: (element) => {
+          const attr = element.getAttribute("data-transform-x");
+          if (attr !== null) return Number(attr) || 0;
+          const float = element.getAttribute("data-float") || element.style.float || "none";
+          if (float === "left") return Math.max(0, parseFloat(element.style.marginLeft) || 0);
+          if (float === "right") return -(Math.max(0, parseFloat(element.style.marginRight) || 0));
+          return 0;
+        },
         renderHTML: (attributes) => ({ "data-transform-x": attributes.transformX }),
       },
       transformY: {
         default: 0,
-        parseHTML: (element) => Number(element.getAttribute("data-transform-y")) || 0,
+        parseHTML: (element) => {
+          const attr = element.getAttribute("data-transform-y");
+          if (attr !== null) return Number(attr) || 0;
+          return Math.max(0, parseFloat(element.style.marginTop) || 0);
+        },
         renderHTML: (attributes) => ({ "data-transform-y": attributes.transformY }),
       },
     };
@@ -60,20 +71,35 @@ export const ResizableVideo = Node.create<ResizableVideoOptions>({
       }
     ];
   },
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node, HTMLAttributes }) {
     const style = [];
-    if (HTMLAttributes.float === "left") {
-      style.push("float: left", "margin-right: 20px", "margin-bottom: 20px");
-    } else if (HTMLAttributes.float === "right") {
-      style.push("float: right", "margin-left: 20px", "margin-bottom: 20px");
+    const { float, width, height, transformX = 0, transformY = 0 } = node.attrs;
+    const tx = Number(transformX) || 0;
+    const ty = Number(transformY) || 0;
+    if (float === "left") {
+      style.push(
+        "float: left",
+        `margin-left: ${Math.max(0, tx)}px`,
+        "margin-right: 20px",
+        `margin-top: ${Math.max(0, ty)}px`,
+        "margin-bottom: 20px"
+      );
+    } else if (float === "right") {
+      style.push(
+        "float: right",
+        "margin-left: 20px",
+        `margin-right: ${Math.max(0, -tx)}px`,
+        `margin-top: ${Math.max(0, ty)}px`,
+        "margin-bottom: 20px"
+      );
     } else {
       style.push("display: inline-block", "vertical-align: middle");
     }
-    if (HTMLAttributes.width) {
-      style.push(`width: ${HTMLAttributes.width}px`);
+    if (width) {
+      style.push(`width: ${width}px`);
     }
-    if (HTMLAttributes.height) {
-      style.push(`height: ${HTMLAttributes.height}px`);
+    if (height) {
+      style.push(`height: ${height}px`);
     }
     return [
       "video",
@@ -82,7 +108,7 @@ export const ResizableVideo = Node.create<ResizableVideoOptions>({
         style: style.join("; "),
         controls: "true",
       }),
-      ["source", { src: HTMLAttributes.src }],
+      ["source", { src: node.attrs.src }],
     ];
   },
   addCommands() {

@@ -19,7 +19,29 @@ import commentRoutes from "./module/comment/comment.route";
 const app: Application = express();
 app.set("trust proxy", 1);
 
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+        "frame-src": [
+          "'self'",
+          "https://res.cloudinary.com",
+          "https://www.youtube-nocookie.com",
+          "https://www.youtube.com",
+        ],
+        "child-src": [
+          "'self'",
+          "https://res.cloudinary.com",
+          "https://www.youtube-nocookie.com",
+          "https://www.youtube.com",
+        ],
+        "img-src": ["'self'", "data:", "https://i.ytimg.com", "https://res.cloudinary.com"],
+        "connect-src": ["'self'", "https://res.cloudinary.com"],
+      },
+    },
+  })
+);
 app.use(cookieParser());
 app.use(
   cors({

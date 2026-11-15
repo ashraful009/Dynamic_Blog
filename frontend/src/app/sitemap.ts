@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { getPostUrl } from "@/utils/postUrl";
+import type { Post } from "@/types/blog";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = (
@@ -33,7 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (res.ok) {
       const json = await res.json();
       const posts = json.data || [];
-      const postRoutes = posts.map((post: any) => ({
+      const postRoutes = posts.map((post: Post) => ({
         url: `${baseUrl}${getPostUrl(post)}`,
         lastModified: new Date(post.publishedAt || post.createdAt || new Date()),
         changeFrequency: "weekly" as const,

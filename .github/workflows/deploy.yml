@@ -1,0 +1,97 @@
+name: Build & Deploy to Netcup VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build backend
+        working-directory: backend
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: https://api.ferdausanamjibon.com/api/v1
+          NEXT_PUBLIC_SITE_URL: https://ferdausanamjibon.com
+        run: |
+          npm ci
+          npm run build
+          rm -rf .next/cache .next/dev
+
+      - name: Build admin
+        working-directory: admin
+        env:
+          NEXT_PUBLIC_API_URL: https://api.ferdausanamjibon.com/api/v1
+          NEXT_PUBLIC_SITE_URL: https://ferdausanamjibon.com
+        run: |
+          npm ci
+          npm run build
+          rm -rf .next/cache .next/dev
+
+      - name: Check VPS deploy secrets
+        id: check_secrets
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          if [ -n "$VPS_HOST" ] && [ -n "$VPS_USER" ] && [ -n "$VPS_SSH_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping VPS upload: add VPS_HOST, VPS_USER, and VPS_SSH_KEY in GitHub Repo Secrets."
+          fi
+
+      - name: Prepare SSH key
+        if: steps.check_secrets.outputs.ready == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Sync production builds to VPS
+        if: steps.check_secrets.outputs.ready == 'true'
+        run: |
+          RSYNC_RSH="ssh -i ~/.ssh/deploy_key"
+          rsync -az --delete -e "$RSYNC_RSH" backend/dist/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/backend/dist/"
+          rsync -az --delete -e "$RSYNC_RSH" backend/prisma/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/backend/prisma/"
+          rsync -az -e "$RSYNC_RSH" backend/package.json backend/package-lock.json "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/backend/"
+
+          rsync -az --delete -e "$RSYNC_RSH" frontend/.next/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/frontend/.next/"
+          rsync -az --delete -e "$RSYNC_RSH" frontend/public/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/frontend/public/"
+          rsync -az -e "$RSYNC_RSH" frontend/package.json frontend/package-lock.json "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/frontend/"
+
+          rsync -az --delete -e "$RSYNC_RSH" admin/.next/ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/admin/.next/"
+          rsync -az -e "$RSYNC_RSH" admin/package.json admin/package-lock.json "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/var/www/zibon-vlog/admin/"
+
+      - name: Install prod deps with pnpm & reload PM2 on VPS
+        if: steps.check_secrets.outputs.ready == 'true'
+        run: |
+          ssh -i ~/.ssh/deploy_key "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" '
+            set -e
+            cd /var/www/zibon-vlog/backend && pnpm install --prod --no-frozen-lockfile --config.dangerouslyAllowAllBuilds=true
+            ./node_modules/.bin/prisma generate
+            ./node_modules/.bin/prisma db push
+            cd /var/www/zibon-vlog/frontend && pnpm install --prod --no-frozen-lockfile --config.dangerouslyAllowAllBuilds=true
+            cd /var/www/zibon-vlog/admin && pnpm install --prod --no-frozen-lockfile --config.dangerouslyAllowAllBuilds=true
+            pm2 reload /var/www/zibon-vlog/ecosystem.config.js
+          '

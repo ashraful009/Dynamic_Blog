@@ -7,6 +7,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Heading4,
   AlignLeft,
   AlignCenter,
   AlignRight,
@@ -14,17 +15,28 @@ import {
   List,
   ListOrdered,
   Quote,
+  Code,
+  SquareCode,
+  Minus,
+  Highlighter,
+  Palette,
   Link as LinkIcon,
   Image as ImageIcon,
   Film,
+  PlaySquare,
   Undo,
   Redo,
 } from "lucide-react";
 interface ToolbarProps {
   editor: Editor | null;
   onOpenMediaModal: () => void;
+  onOpenYoutubeModal: () => void;
 }
-export default function Toolbar({ editor, onOpenMediaModal }: ToolbarProps) {
+export default function Toolbar({
+  editor,
+  onOpenMediaModal,
+  onOpenYoutubeModal,
+}: ToolbarProps) {
   if (!editor) {
     return null;
   }
@@ -103,9 +115,9 @@ export default function Toolbar({ editor, onOpenMediaModal }: ToolbarProps) {
         <option value="Arial, sans-serif">Arial</option>
         <option value="'Times New Roman', serif">Times New Roman</option>
         <option value="'Noto Sans Bengali', sans-serif">Noto Sans Bengali</option>
-        <option value="Kalpurush, sans-serif">Kalpurush</option>
-        <option value="'Hind Siliguri', sans-serif">Hind Siliguri</option>
-        <option value="'Siyam Rupali', sans-serif">Siyam Rupali</option>
+        <option value="'Kalpurush', 'Noto Sans Bengali', sans-serif">Kalpurush</option>
+        <option value="'Hind Siliguri', 'Noto Sans Bengali', sans-serif">Hind Siliguri</option>
+        <option value="'Siyam Rupali', 'Noto Sans Bengali', sans-serif">Siyam Rupali</option>
       </select>
       <select
         onChange={(e) => {
@@ -158,6 +170,45 @@ export default function Toolbar({ editor, onOpenMediaModal }: ToolbarProps) {
       >
         <Strikethrough size={16} />
       </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleCode().run()}
+        isActive={editor.isActive("code")}
+        title="Inline Code"
+      >
+        <Code size={16} />
+      </ToolbarButton>
+      <label
+        title="Text Color"
+        className="p-1.5 rounded-md flex items-center justify-center gap-1 cursor-pointer text-text-secondary hover:bg-bg-tertiary hover:text-text transition-all duration-200 relative"
+      >
+        <Palette size={16} />
+        <input
+          type="color"
+          value={editor.getAttributes("textStyle").color || "#000000"}
+          onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+          className="w-4 h-4 p-0 border-0 bg-transparent cursor-pointer"
+          aria-label="Text Color"
+        />
+      </label>
+      <label
+        title="Highlight Color"
+        className={`p-1.5 rounded-md flex items-center justify-center gap-1 cursor-pointer transition-all duration-200 relative ${
+          editor.isActive("highlight")
+            ? "bg-primary/10 text-primary shadow-sm"
+            : "text-text-secondary hover:bg-bg-tertiary hover:text-text"
+        }`}
+      >
+        <Highlighter size={16} />
+        <input
+          type="color"
+          value={editor.getAttributes("highlight").color || "#fef08a"}
+          onChange={(e) =>
+            editor.chain().focus().setHighlight({ color: e.target.value }).run()
+          }
+          className="w-4 h-4 p-0 border-0 bg-transparent cursor-pointer"
+          aria-label="Highlight Color"
+        />
+      </label>
       <div className="w-px h-6 bg-border mx-1" />
       <ToolbarButton
         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
@@ -179,6 +230,13 @@ export default function Toolbar({ editor, onOpenMediaModal }: ToolbarProps) {
         title="Heading 3"
       >
         <Heading3 size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+        isActive={editor.isActive("heading", { level: 4 })}
+        title="Heading 4"
+      >
+        <Heading4 size={16} />
       </ToolbarButton>
       <div className="w-px h-6 bg-border mx-1" />
       <ToolbarButton
@@ -231,6 +289,19 @@ export default function Toolbar({ editor, onOpenMediaModal }: ToolbarProps) {
       >
         <Quote size={16} />
       </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        isActive={editor.isActive("codeBlock")}
+        title="Code Block"
+      >
+        <SquareCode size={16} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={() => editor.chain().focus().setHorizontalRule().run()}
+        title="Horizontal Rule"
+      >
+        <Minus size={16} />
+      </ToolbarButton>
       <div className="w-px h-6 bg-border mx-1" />
       <ToolbarButton
         onClick={setLink}
@@ -245,6 +316,12 @@ export default function Toolbar({ editor, onOpenMediaModal }: ToolbarProps) {
       >
         <ImageIcon size={16} />
         <Film size={16} style={{ marginLeft: "-4px" }} />
+      </ToolbarButton>
+      <ToolbarButton
+        onClick={onOpenYoutubeModal}
+        title="Insert YouTube Video"
+      >
+        <PlaySquare size={16} />
       </ToolbarButton>
     </div>
   );

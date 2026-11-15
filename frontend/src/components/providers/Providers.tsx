@@ -23,22 +23,22 @@ export default function Providers({ children }: { children: React.ReactNode }) {
         toastOptions={{
           duration: 4000,
           style: {
-            background: "#1A1A2E",
-            color: "#F0F0F5",
-            border: "1px solid #2A2A40",
+            background: "var(--color-surface-2)",
+            color: "var(--color-heading)",
+            border: "1px solid var(--color-line-strong)",
             borderRadius: "10px",
             fontSize: "14px",
           },
           success: {
             iconTheme: {
-              primary: "#10B981",
-              secondary: "#1A1A2E",
+              primary: "var(--color-success)",
+              secondary: "var(--color-surface-2)",
             },
           },
           error: {
             iconTheme: {
-              primary: "#EF4444",
-              secondary: "#1A1A2E",
+              primary: "var(--color-danger)",
+              secondary: "var(--color-surface-2)",
             },
           },
         }}

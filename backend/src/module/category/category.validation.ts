@@ -29,8 +29,18 @@ const deleteCategorySchema = z.object({
   }),
 });
 
+const reorderCategorySchema = z.object({
+  body: z.object({
+    parentId: z.string().uuid("Invalid parent category ID").nullable(),
+    orderedIds: z
+      .array(z.string().uuid("Invalid category ID"))
+      .min(1, "orderedIds must not be empty"),
+  }),
+});
+
 export const CategoryValidation = {
   create: createCategorySchema,
   update: updateCategorySchema,
   delete: deleteCategorySchema,
+  reorder: reorderCategorySchema,
 };

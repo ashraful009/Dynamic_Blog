@@ -1,4 +1,4 @@
-export function getPostUrl(post: { slug: string; createdAt?: string; publishedAt?: string }): string {
+export function getPostUrl(post: { slug: string; createdAt?: string | null; publishedAt?: string | null }): string {
   if (!post || !post.slug) return "/";
   
   const dateStr = post.publishedAt || post.createdAt;

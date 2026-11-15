@@ -1,5 +1,5 @@
 import DatumHero from "@/components/public/datum/DatumHero";
-import DatumFooter from "@/components/public/datum/DatumFooter";
+import PageGrid from "@/components/public/PageGrid";
 import PostFeed from "@/components/public/feed/PostFeed";
 import Sidebar from "@/components/public/sidebar/Sidebar";
 
@@ -38,25 +38,26 @@ export default async function Homepage({
   const tags = data?.tags || [];
 
   return (
-    <>
-      <main className="bg-[#f2f2f2] min-h-screen">
-        <DatumHero settings={settings} />
-        <div className="w-[92%] lg:w-[82%] max-w-[1240px] mx-auto px-0 grid grid-cols-1 lg:grid-cols-[68%_32%] gap-8 lg:gap-10 py-10 lg:py-14">
+    <main className="bg-page min-h-screen">
+      <DatumHero settings={settings} />
+      <PageGrid
+        main={
           <PostFeed
             posts={recentPosts}
             readMoreText={settings?.readMoreBtnText || "READ MORE"}
             pagination={pagination}
             basePath="/"
           />
+        }
+        sidebar={
           <Sidebar
             settings={settings}
             categories={categories}
             recentPosts={sidebarRecentPosts}
             tags={tags}
           />
-        </div>
-      </main>
-      <DatumFooter settings={settings} />
-    </>
+        }
+      />
+    </main>
   );
 }

@@ -13,6 +13,7 @@ declare module "@tiptap/core" {
         title?: string;
         width?: number;
         height?: number;
+        aspectRatio?: string | null;
       }) => ReturnType;
     };
   }
@@ -29,13 +30,32 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
       title: { default: null },
       width: {
         default: null,
-        parseHTML: (element) => element.getAttribute("data-width"),
-        renderHTML: (attributes) => ({ "data-width": attributes.width }),
+        parseHTML: (element) => {
+          const val = element.getAttribute("data-width");
+          return val ? Number(val) : null;
+        },
+        renderHTML: (attributes) =>
+          attributes.width ? { "data-width": attributes.width } : {},
       },
       height: {
         default: null,
-        parseHTML: (element) => element.getAttribute("data-height"),
-        renderHTML: (attributes) => ({ "data-height": attributes.height }),
+        parseHTML: (element) => {
+          const val = element.getAttribute("data-height");
+          return val ? Number(val) : null;
+        },
+        renderHTML: (attributes) =>
+          attributes.height ? { "data-height": attributes.height } : {},
+      },
+      aspectRatio: {
+        default: null,
+        parseHTML: (element) =>
+          element.getAttribute("data-aspect-ratio") ||
+          element.style.aspectRatio ||
+          null,
+        renderHTML: (attributes) =>
+          attributes.aspectRatio
+            ? { "data-aspect-ratio": attributes.aspectRatio }
+            : {},
       },
       float: {
         default: "none",
@@ -44,12 +64,23 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
       },
       transformX: {
         default: 0,
-        parseHTML: (element) => Number(element.getAttribute("data-transform-x")) || 0,
+        parseHTML: (element) => {
+          const attr = element.getAttribute("data-transform-x");
+          if (attr !== null) return Number(attr) || 0;
+          const float = element.getAttribute("data-float") || element.style.float || "none";
+          if (float === "left") return Math.max(0, parseFloat(element.style.marginLeft) || 0);
+          if (float === "right") return -(Math.max(0, parseFloat(element.style.marginRight) || 0));
+          return 0;
+        },
         renderHTML: (attributes) => ({ "data-transform-x": attributes.transformX }),
       },
       transformY: {
         default: 0,
-        parseHTML: (element) => Number(element.getAttribute("data-transform-y")) || 0,
+        parseHTML: (element) => {
+          const attr = element.getAttribute("data-transform-y");
+          if (attr !== null) return Number(attr) || 0;
+          return Math.max(0, parseFloat(element.style.marginTop) || 0);
+        },
         renderHTML: (attributes) => ({ "data-transform-y": attributes.transformY }),
       },
     };
@@ -61,20 +92,45 @@ export const ResizableImage = Node.create<ResizableImageOptions>({
       },
     ];
   },
-  renderHTML({ HTMLAttributes }) {
+  renderHTML({ node, HTMLAttributes }) {
     const style = [];
-    if (HTMLAttributes.float === "left") {
-      style.push("float: left", "margin-right: 20px", "margin-bottom: 20px");
-    } else if (HTMLAttributes.float === "right") {
-      style.push("float: right", "margin-left: 20px", "margin-bottom: 20px");
+    const { float, width, height, aspectRatio, transformX = 0, transformY = 0 } = node.attrs;
+    const tx = Number(transformX) || 0;
+    const ty = Number(transformY) || 0;
+    if (float === "left") {
+      style.push(
+        "float: left",
+        `margin-left: ${Math.max(0, tx)}px`,
+        "margin-right: 20px",
+        `margin-top: ${Math.max(0, ty)}px`,
+        "margin-bottom: 20px"
+      );
+    } else if (float === "right") {
+      style.push(
+        "float: right",
+        "margin-left: 20px",
+        `margin-right: ${Math.max(0, -tx)}px`,
+        `margin-top: ${Math.max(0, ty)}px`,
+        "margin-bottom: 20px"
+      );
     } else {
       style.push("display: inline-block", "vertical-align: middle");
     }
-    if (HTMLAttributes.width) {
-      style.push(`width: ${HTMLAttributes.width}px`);
-    }
-    if (HTMLAttributes.height) {
-      style.push(`height: ${HTMLAttributes.height}px`);
+    if (aspectRatio) {
+      style.push(
+        width ? `width: ${width}px` : "width: 100%",
+        "max-width: 100%",
+        "height: auto",
+        `aspect-ratio: ${aspectRatio}`,
+        "object-fit: cover"
+      );
+    } else {
+      if (width) {
+        style.push(`width: ${width}px`);
+      }
+      if (height) {
+        style.push(`height: ${height}px`);
+      }
     }
     return [
       "img",

@@ -37,6 +37,8 @@ export default function NewPostPage() {
 
   const DRAFT_KEY = "admin_draft_post";
 
+  const [shouldDefaultHomeCategory, setShouldDefaultHomeCategory] = useState(false);
+
   useEffect(() => {
     const savedData = localStorage.getItem(DRAFT_KEY);
     if (savedData) {
@@ -54,13 +56,17 @@ export default function NewPostPage() {
           setReadTime(parsed.readTime || "");
           setDisplayOrder(parsed.displayOrder || "");
           setIsFeatured(parsed.isFeatured || false);
+          setIsLoaded(true);
         }, 0);
         return () => clearTimeout(timeoutId);
       } catch (e) {
         console.error("Failed to parse saved draft", e);
       }
     }
-    const timeoutId = setTimeout(() => setIsLoaded(true), 0);
+    const timeoutId = setTimeout(() => {
+      setShouldDefaultHomeCategory(true);
+      setIsLoaded(true);
+    }, 0);
     return () => clearTimeout(timeoutId);
   }, []);
 
@@ -110,7 +116,7 @@ export default function NewPostPage() {
   const uploadMutation = useMutation({
     mutationFn: (file: File) => mediaApi.upload(file),
     onSuccess: (res) => {
-      setCoverImage(res.data.data.url);
+      setCoverImage(res.data.data.secureUrl || res.data.data.url);
       toast.success("Image uploaded successfully!");
     },
     onError: () => {
@@ -217,7 +223,7 @@ export default function NewPostPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
-        <div>
+        <div className="min-w-0">
           <div className="mb-4">
             <input
               type="text"
@@ -289,7 +295,11 @@ export default function NewPostPage() {
             </p>
           </div>
 
-          <PostCategorySelect selectedIds={categoryIds} onChange={setCategoryIds} />
+          <PostCategorySelect
+            selectedIds={categoryIds}
+            onChange={setCategoryIds}
+            defaultHomeIfEmpty={shouldDefaultHomeCategory}
+          />
 
           <PostTagSelect selectedIds={tagIds} onChange={setTagIds} />
           

@@ -1,36 +1,33 @@
-import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import ContentProtector from "@/components/public/ContentProtector";
+import DatumFooter from "@/components/public/datum/DatumFooter";
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-datum-display",
-  display: "swap",
-});
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-datum-body",
-  display: "swap",
-});
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-datum-mono",
-  display: "swap",
-});
+async function getSettingsData() {
+  try {
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    const res = await fetch(`${apiUrl}/site-settings`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.data || null;
+  } catch {
+    return null;
+  }
+}
 
-export default function HomepageLayout({
+export default async function HomepageLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const settings = await getSettingsData();
+
   return (
-    <div
-      className={`bg-[#f2f2f2] text-[#111111] font-datum-body text-base leading-relaxed min-h-screen ${spaceGrotesk.variable} ${plexSans.variable} ${plexMono.variable}`}
-    >
+    <div className="bg-page text-body font-body text-base leading-relaxed min-h-screen">
       <ContentProtector />
       {children}
+      <DatumFooter settings={settings} />
     </div>
   );
 }

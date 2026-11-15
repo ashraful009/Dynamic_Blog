@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { categoriesApi } from "@/lib/api";
 import toast from "react-hot-toast";
+import { SYSTEM_HOME_CATEGORY_SLUG } from "@/constants/category";
 
 interface CategoryFormProps {
   initialData?: {
@@ -11,6 +12,7 @@ interface CategoryFormProps {
     slug: string;
     parentId?: string | null;
     showInHeader?: boolean;
+    isSystem?: boolean;
   } | null;
   categories: {
     id: string;
@@ -32,6 +34,9 @@ export default function CategoryForm({
   const [slug, setSlug] = useState("");
   const [parentId, setParentId] = useState("");
   const [showInHeader, setShowInHeader] = useState(false);
+  const isProtectedSystem = Boolean(
+    initialData?.isSystem || initialData?.slug === SYSTEM_HOME_CATEGORY_SLUG
+  );
 
   useEffect(() => {
     if (initialData) {
@@ -92,16 +97,22 @@ export default function CategoryForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {isProtectedSystem && (
+        <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300">
+          <strong>দিনলিপি</strong> is a protected system category pinned first for homepage posts. Its name, slug, and top-level placement cannot be modified.
+        </div>
+      )}
       <div>
         <label className="block text-sm font-medium text-text-secondary mb-1.5">
           Name
         </label>
         <input
           type="text"
-          className="w-full bg-bg-card border border-border rounded-lg px-4 py-2.5 text-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+          className="w-full bg-bg-card border border-border rounded-lg px-4 py-2.5 text-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           placeholder="e.g. বইয়ের আলাপ"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          disabled={isProtectedSystem}
           required
         />
       </div>
@@ -112,10 +123,11 @@ export default function CategoryForm({
         </label>
         <input
           type="text"
-          className="w-full bg-bg-card border border-border rounded-lg px-4 py-2.5 text-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all"
+          className="w-full bg-bg-card border border-border rounded-lg px-4 py-2.5 text-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           placeholder="e.g. boiyer-alap"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
+          disabled={isProtectedSystem}
         />
         <p className="text-[11px] text-text-muted mt-1">
           Leave empty to auto-generate from name (supports Bengali & English)
@@ -127,9 +139,10 @@ export default function CategoryForm({
           Parent Category
         </label>
         <select
-          className="w-full bg-bg-card border border-border rounded-lg px-4 py-2.5 text-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all appearance-none"
+          className="w-full bg-bg-card border border-border rounded-lg px-4 py-2.5 text-text focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
           value={parentId}
           onChange={(e) => setParentId(e.target.value)}
+          disabled={isProtectedSystem}
         >
           <option value="">None (Top-level)</option>
           {categories

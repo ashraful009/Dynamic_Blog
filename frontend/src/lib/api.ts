@@ -29,6 +29,7 @@ export const postsApi = {
     search?: string;
     categorySlug?: string;
     tagSlug?: string;
+    homeOnly?: boolean;
   }) => api.get("/posts", { params }),
   getBySlug: (slug: string) => api.get(`/posts/${slug}`),
 };

@@ -109,6 +109,8 @@ export const categoriesApi = {
     }
   ) => api.patch(`/categories/${id}`, data),
   delete: (id: string) => api.delete(`/categories/${id}`),
+  reorder: (data: { parentId: string | null; orderedIds: string[] }) =>
+    api.patch("/categories/reorder", data),
 };
 
 export const tagsApi = {

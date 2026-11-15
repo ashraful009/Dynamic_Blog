@@ -1,10 +1,11 @@
 import fs from "fs";
 import prisma from "../../db";
 import { ApiError } from "../../middleware/globalErrorHandler";
-import { uploadImage, uploadVideo, deleteAsset, UploadResult } from "../../utils/uploadImage";
+import { uploadImage, uploadVideo, uploadPdf, deleteAsset, UploadResult } from "../../utils/uploadImage";
 import { MediaType } from "@prisma/client";
 const IMAGE_MIMES = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/svg+xml"];
 const VIDEO_MIMES = ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"];
+const PDF_MIMES = ["application/pdf"];
 const upload = async (
   file: Express.Multer.File,
   options: { alt?: string; postId?: string }
@@ -21,10 +22,13 @@ const upload = async (
     } else if (VIDEO_MIMES.includes(file.mimetype)) {
       mediaType = "VIDEO";
       uploadResult = await uploadVideo(file.path);
+    } else if (PDF_MIMES.includes(file.mimetype)) {
+      mediaType = "PDF";
+      uploadResult = await uploadPdf(file.path);
     } else {
       throw new ApiError(
         400,
-        `Unsupported file type: ${file.mimetype}. Supported: ${[...IMAGE_MIMES, ...VIDEO_MIMES].join(", ")}`
+        `Unsupported file type: ${file.mimetype}. Supported: ${[...IMAGE_MIMES, ...VIDEO_MIMES, ...PDF_MIMES].join(", ")}`
       );
     }
     const media = await prisma.media.create({
@@ -35,8 +39,8 @@ const upload = async (
         format: uploadResult.format,
         type: mediaType,
         hlsUrl: uploadResult.hlsUrl || null,
-        width: uploadResult.width,
-        height: uploadResult.height,
+        width: uploadResult.width ?? null,
+        height: uploadResult.height ?? null,
         bytes: uploadResult.bytes,
         alt: options.alt || null,
         postId: options.postId || null,
@@ -91,8 +95,10 @@ const deleteMedia = async (id: string) => {
   if (!media) {
     throw new ApiError(404, "Media not found.");
   }
-  const resourceType = media.type === "VIDEO" ? "video" : "image";
-  await deleteAsset(media.publicId, resourceType);
+  const resourceType =
+    media.type === "VIDEO" ? "video" : media.type === "PDF" ? "raw" : "image";
+  const deliveryType = media.type === "PDF" ? "upload" : "authenticated";
+  await deleteAsset(media.publicId, resourceType, deliveryType);
   await prisma.media.delete({ where: { id } });
   return { id };
 };

@@ -1,8 +1,11 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import DatumHero from "@/components/public/datum/DatumHero";
+import PageGrid from "@/components/public/PageGrid";
 import PostFeed from "@/components/public/feed/PostFeed";
 import Sidebar from "@/components/public/sidebar/Sidebar";
+import type { Category } from "@/types/blog";
+import { SYSTEM_HOME_CATEGORY_SLUG } from "@/constants/category";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +40,7 @@ async function getCategoryPageData(slug: string, page: number) {
 
     const targetSlug = normalizeSlug(decodedSlug);
 
-    const findCat = (cats: any[]): any => {
+    const findCat = (cats: Category[]): Category | null => {
       for (const c of cats) {
         if (
           normalizeSlug(c.slug) === targetSlug ||
@@ -107,6 +110,10 @@ export default async function CategoryPage({
   searchParams: Promise<{ page?: string }>;
 }) {
   const { slug } = await params;
+  const normalizedSlug = decodeURIComponent(slug).toLowerCase();
+  if (normalizedSlug === SYSTEM_HOME_CATEGORY_SLUG || normalizedSlug === "dinolipi") {
+    redirect("/");
+  }
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp?.page || "1", 10) || 1);
 
@@ -128,27 +135,31 @@ export default async function CategoryPage({
   const totalPages = Math.max(1, meta.totalPages || 1);
 
   return (
-    <div className="bg-[#f2f2f2] min-h-screen">
+    <div className="bg-page min-h-screen">
       <DatumHero
         settings={settings}
         archiveLabel={`CATEGORY: ${category.name}`}
         pageLabel={`PAGE ${meta.page} OF ${totalPages}`}
       />
 
-      <div className="w-[92%] lg:w-[82%] max-w-[1240px] mx-auto px-0 grid grid-cols-1 lg:grid-cols-[68%_32%] gap-8 lg:gap-10 py-10 lg:py-14">
-        <PostFeed
-          posts={posts}
-          readMoreText={settings?.readMoreBtnText || "READ MORE"}
-          pagination={meta}
-          basePath={`/category/${category.slug}`}
-        />
-        <Sidebar
-          settings={settings}
-          categories={categories}
-          recentPosts={sidebarRecentPosts}
-          tags={tags}
-        />
-      </div>
+      <PageGrid
+        main={
+          <PostFeed
+            posts={posts}
+            readMoreText={settings?.readMoreBtnText || "READ MORE"}
+            pagination={meta}
+            basePath={`/category/${category.slug}`}
+          />
+        }
+        sidebar={
+          <Sidebar
+            settings={settings}
+            categories={categories}
+            recentPosts={sidebarRecentPosts}
+            tags={tags}
+          />
+        }
+      />
     </div>
   );
 }

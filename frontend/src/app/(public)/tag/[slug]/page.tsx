@@ -1,8 +1,10 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import DatumHero from "@/components/public/datum/DatumHero";
+import PageGrid from "@/components/public/PageGrid";
 import PostFeed from "@/components/public/feed/PostFeed";
 import Sidebar from "@/components/public/sidebar/Sidebar";
+import type { Tag } from "@/types/blog";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +40,7 @@ async function getTagPageData(slug: string, page: number) {
     const targetSlug = normalizeSlug(decodedSlug);
 
     const tag = tags.find(
-      (t: any) =>
+      (t: Tag) =>
         normalizeSlug(t.slug) === targetSlug ||
         t.slug === decodedSlug ||
         t.slug === slug
@@ -117,27 +119,31 @@ export default async function TagPage({
   const totalPages = Math.max(1, meta.totalPages || 1);
 
   return (
-    <div className="bg-[#f2f2f2] min-h-screen">
+    <div className="bg-page min-h-screen">
       <DatumHero
         settings={settings}
         archiveLabel={`TAG: ${tag.name}`}
         pageLabel={`PAGE ${meta.page} OF ${totalPages}`}
       />
 
-      <div className="w-[92%] lg:w-[82%] max-w-[1240px] mx-auto px-0 grid grid-cols-1 lg:grid-cols-[68%_32%] gap-8 lg:gap-10 py-10 lg:py-14">
-        <PostFeed
-          posts={posts}
-          readMoreText={settings?.readMoreBtnText || "READ MORE"}
-          pagination={meta}
-          basePath={`/tag/${tag.slug}`}
-        />
-        <Sidebar
-          settings={settings}
-          categories={categories}
-          recentPosts={sidebarRecentPosts}
-          tags={tags}
-        />
-      </div>
+      <PageGrid
+        main={
+          <PostFeed
+            posts={posts}
+            readMoreText={settings?.readMoreBtnText || "READ MORE"}
+            pagination={meta}
+            basePath={`/tag/${tag.slug}`}
+          />
+        }
+        sidebar={
+          <Sidebar
+            settings={settings}
+            categories={categories}
+            recentPosts={sidebarRecentPosts}
+            tags={tags}
+          />
+        }
+      />
     </div>
   );
 }

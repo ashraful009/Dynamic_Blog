@@ -1,14 +1,18 @@
 import { Router } from "express";
 import multer from "multer";
 import path from "path";
+import fs from "fs";
 import { MediaController } from "./media.controller";
 import { auth, authorize } from "../../middleware/auth";
 import validateRequest from "../../middleware/validateRequest";
 import { MediaValidation } from "./media.validation";
 const router = Router();
+const tmpDir = path.join(process.cwd(), "tmp");
+fs.mkdirSync(tmpDir, { recursive: true });
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    cb(null, path.join(process.cwd(), "tmp"));
+    fs.mkdirSync(tmpDir, { recursive: true });
+    cb(null, tmpDir);
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -31,6 +35,7 @@ const fileFilter = (
     "video/webm",
     "video/quicktime",
     "video/x-msvideo",
+    "application/pdf",
   ];
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
@@ -53,7 +58,13 @@ router.post(
   validateRequest(MediaValidation.upload),
   MediaController.upload
 );
-router.get("/", auth, authorize("ADMIN"), MediaController.getAll);
+router.get(
+  "/",
+  auth,
+  authorize("ADMIN"),
+  validateRequest(MediaValidation.getAll),
+  MediaController.getAll
+);
 router.delete(
   "/:id",
   auth,

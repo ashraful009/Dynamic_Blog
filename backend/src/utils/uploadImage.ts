@@ -11,10 +11,10 @@ export interface UploadResult {
   url: string;
   secureUrl: string;
   format: string;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   bytes: number;
-  resourceType: "image" | "video";
+  resourceType: "image" | "video" | "raw";
   hlsUrl?: string;
 }
 export const uploadImage = async (
@@ -85,14 +85,38 @@ export const uploadVideo = async (
     throw new Error(`Video upload failed: ${uploadError.message}`);
   }
 };
+export const uploadPdf = async (
+  filePath: string,
+  folder: string = "zibon-vlog/pdfs"
+): Promise<UploadResult> => {
+  try {
+    const result: UploadApiResponse = await cloudinary.uploader.upload(filePath, {
+      folder,
+      resource_type: "raw",
+      type: "upload",
+    });
+    return {
+      publicId: result.public_id,
+      url: result.secure_url,
+      secureUrl: result.secure_url,
+      format: result.format || "pdf",
+      bytes: result.bytes,
+      resourceType: "raw",
+    };
+  } catch (error) {
+    const uploadError = error as UploadApiErrorResponse;
+    throw new Error(`PDF upload failed: ${uploadError.message}`);
+  }
+};
 export const deleteAsset = async (
   publicId: string,
-  resourceType: "image" | "video" = "image"
+  resourceType: "image" | "video" | "raw" = "image",
+  deliveryType: "authenticated" | "upload" = "authenticated"
 ): Promise<void> => {
   try {
     await cloudinary.uploader.destroy(publicId, {
       resource_type: resourceType,
-      type: "authenticated",
+      type: deliveryType,
     });
   } catch (error) {
     const deleteError = error as UploadApiErrorResponse;

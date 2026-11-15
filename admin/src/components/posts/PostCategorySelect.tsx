@@ -1,14 +1,21 @@
 "use client";
+import { useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { categoriesApi } from "@/lib/api";
 import { FolderTree } from "lucide-react";
+import { SYSTEM_HOME_CATEGORY_SLUG } from "@/constants/category";
 
 interface PostCategorySelectProps {
   selectedIds: string[];
   onChange: (categoryIds: string[]) => void;
+  defaultHomeIfEmpty?: boolean;
 }
 
-export default function PostCategorySelect({ selectedIds, onChange }: PostCategorySelectProps) {
+export default function PostCategorySelect({
+  selectedIds,
+  onChange,
+  defaultHomeIfEmpty = false,
+}: PostCategorySelectProps) {
   const { data: res, isLoading } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: () => categoriesApi.getAll(),
@@ -16,6 +23,25 @@ export default function PostCategorySelect({ selectedIds, onChange }: PostCatego
 
   const categories = res?.data?.data || [];
   const parentCategories = categories.filter((c: any) => !c.parentId);
+  const appliedDefaultRef = useRef(false);
+
+  useEffect(() => {
+    if (
+      !defaultHomeIfEmpty ||
+      appliedDefaultRef.current ||
+      selectedIds.length > 0 ||
+      categories.length === 0
+    ) {
+      return;
+    }
+    const homeCategory = categories.find(
+      (c: any) => c.isSystem || c.slug === SYSTEM_HOME_CATEGORY_SLUG
+    );
+    if (homeCategory) {
+      appliedDefaultRef.current = true;
+      onChange([homeCategory.id]);
+    }
+  }, [defaultHomeIfEmpty, selectedIds.length, categories, onChange]);
 
   const toggleCategory = (id: string) => {
     if (selectedIds.includes(id)) {

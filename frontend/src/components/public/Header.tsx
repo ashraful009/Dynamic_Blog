@@ -1,15 +1,22 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import React from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { categoriesApi, siteSettingsApi } from "@/lib/api";
+import Container from "@/components/public/Container";
+import type { Category, SiteSettings } from "@/types/blog";
+import {
+  SYSTEM_HOME_CATEGORY_NAME,
+  SYSTEM_HOME_CATEGORY_SLUG,
+} from "@/constants/category";
 
 export default function Header() {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const mobileOpen = openPath === pathname;
   const [expandedCats, setExpandedCats] = useState<Record<string, boolean>>({});
 
   const toggleCat = (id: string) => {
@@ -26,28 +33,38 @@ export default function Header() {
     queryFn: () => siteSettingsApi.get(),
   });
 
-  const categories = catRes?.data?.data || [];
-  const settings = settingsRes?.data?.data || {};
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+  const categories: Category[] = catRes?.data?.data || [];
+  const settings: SiteSettings = settingsRes?.data?.data || {};
 
   const isActive = (href: string) => pathname === href;
 
-  // Categories marked to appear in the top header navbar (e.g., প্রকাশিত বই, দিনলিপি)
+  const isSystemCategory = (c: Category) =>
+    Boolean(c.isSystem || c.slug === SYSTEM_HOME_CATEGORY_SLUG);
+
+  const systemCategory = categories.find(
+    (c: Category) => !c.parentId && isSystemCategory(c)
+  );
+  const homeCategoryLabel = systemCategory?.name || SYSTEM_HOME_CATEGORY_NAME;
+  const homeCategoryChildren = systemCategory
+    ? systemCategory.children && systemCategory.children.length > 0
+      ? systemCategory.children
+      : categories.filter((c: Category) => c.parentId === systemCategory.id)
+    : [];
+
+  // Categories marked to appear in the top header navbar (excluding system home category দিনলিপি, which is always pinned first as "/")
   const headerCategories = categories.filter(
-    (c: any) => !c.parentId && c.showInHeader
+    (c: Category) => !c.parentId && c.showInHeader && !isSystemCategory(c)
   );
 
-  // Fallback: if no category is marked as showInHeader yet, show top-level categories
+  // Fallback: if no other category is marked as showInHeader yet, show top-level categories
   const navCategories =
     headerCategories.length > 0
       ? headerCategories
       : categories
           .filter(
-            (c: any) =>
+            (c: Category) =>
               !c.parentId &&
+              !isSystemCategory(c) &&
               !["home", "about", "contact"].includes(c.name.toLowerCase())
           )
           .slice(0, 4);
@@ -57,12 +74,12 @@ export default function Header() {
     settings.siteSubtitle !== undefined ? settings.siteSubtitle : "লেখালেখি";
 
   return (
-    <header className="bg-white sticky top-0 z-50 border-b border-gray-200">
+    <header className="bg-page-alt sticky top-0 z-50 border-b border-line">
       {/* Mobile Toggle */}
       <div className="absolute top-4 right-4 z-50 md:hidden flex items-center">
         <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex items-center justify-center w-10 h-10 rounded-lg bg-transparent border-none cursor-pointer text-gray-700 hover:text-primary"
+          onClick={() => setOpenPath(mobileOpen ? null : pathname)}
+          className="flex items-center justify-center w-10 h-10 rounded-control bg-transparent border-none cursor-pointer text-body hover:text-link-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0"
           aria-label="Toggle menu"
         >
           {mobileOpen ? <X size={22} /> : <Menu size={22} />}
@@ -70,66 +87,89 @@ export default function Header() {
       </div>
 
       {/* Main Centered Branding Area (matching shuhanrizwan.com) */}
-      <div className="pt-7 pb-5 md:pt-9 md:pb-6 text-center flex flex-col items-center justify-center">
-        <Link href="/" className="no-underline text-[#111] group">
-          <h1 className="text-3xl md:text-[44px] font-bold tracking-tight mb-1.5 group-hover:text-primary transition-colors">
+      <Container className="pt-7 pb-5 md:pt-9 md:pb-6 text-center flex flex-col items-center justify-center">
+        <Link href="/" className="no-underline text-heading group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0 rounded-control">
+          <h1 className="text-3xl md:text-[44px] font-bold tracking-tight mb-1.5 group-hover:text-link-hover transition-colors">
             {siteName}
           </h1>
           {siteSubtitle && (
-            <p className="text-gray-600 italic font-serif text-sm md:text-[15px]">
+            <p className="text-muted italic font-serif text-sm md:text-body">
               {siteSubtitle}
             </p>
           )}
         </Link>
-      </div>
+      </Container>
 
       {/* Desktop Navigation Bar */}
-      <div className="hidden md:block border-t border-gray-200 bg-white">
-        <nav className="flex items-center justify-center flex-wrap gap-x-4 h-12 text-[14px] text-[#222]">
-          <Link
-            href="/"
-            className={`hover:text-primary transition-colors no-underline ${
-              isActive("/") ? "text-primary font-bold" : "text-[#222]"
-            }`}
-          >
-            মূলপাতা
-          </Link>
+      <div className="hidden md:block border-t border-line bg-page-alt">
+        <Container>
+          <nav className="flex items-center justify-center flex-wrap gap-x-4 h-12 text-small text-body">
+          <div className="group relative h-full flex items-center">
+            <Link
+              href="/"
+              className={`flex items-center gap-1 hover:text-link-hover transition-colors no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0 rounded-control ${
+                isActive("/") ? "text-link font-bold" : "text-body"
+              }`}
+            >
+              <span>{homeCategoryLabel}</span>
+              {homeCategoryChildren.length > 0 && (
+                <ChevronDown
+                  size={13}
+                  className="text-link transition-transform duration-200 group-hover:rotate-180"
+                />
+              )}
+            </Link>
 
-          {navCategories.map((cat: any) => {
+            {homeCategoryChildren.length > 0 && (
+              <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-0 min-w-[200px] bg-surface shadow-raised border border-line border-t-2 border-t-primary py-1.5 z-50">
+                {homeCategoryChildren.map((child: Category) => (
+                  <Link
+                    key={child.id}
+                    href={`/category/${child.slug}`}
+                    className="block px-4 py-2 text-small text-body hover:bg-surface-2 hover:text-link-hover transition-colors no-underline text-left border-b border-line last:border-b-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0"
+                  >
+                    {child.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {navCategories.map((cat: Category) => {
             const children =
               cat.children && cat.children.length > 0
                 ? cat.children
-                : categories.filter((c: any) => c.parentId === cat.id);
+                : categories.filter((c: Category) => c.parentId === cat.id);
             const hasChildren = children.length > 0;
 
             return (
               <React.Fragment key={cat.id}>
-                <span className="text-gray-300 select-none">/</span>
+                <span className="text-faint select-none">/</span>
                 <div className="group relative h-full flex items-center">
                   <Link
                     href={`/category/${cat.slug}`}
-                    className={`flex items-center gap-1 hover:text-primary transition-colors no-underline ${
+                    className={`flex items-center gap-1 hover:text-link-hover transition-colors no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0 rounded-control ${
                       pathname === `/category/${cat.slug}`
-                        ? "text-primary font-bold"
-                        : "text-[#222]"
+                        ? "text-link font-bold"
+                        : "text-body"
                     }`}
                   >
                     <span>{cat.name}</span>
                     {hasChildren && (
                       <ChevronDown
                         size={13}
-                        className="text-primary transition-transform duration-200 group-hover:rotate-180"
+                        className="text-link transition-transform duration-200 group-hover:rotate-180"
                       />
                     )}
                   </Link>
 
                   {hasChildren && (
-                    <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-0 min-w-[200px] bg-white shadow-lg border border-gray-200 border-t-2 border-t-primary py-1.5 z-50">
-                      {children.map((child: any) => (
+                    <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-0 min-w-[200px] bg-surface shadow-raised border border-line border-t-2 border-t-primary py-1.5 z-50">
+                      {children.map((child: Category) => (
                         <Link
                           key={child.id}
                           href={`/category/${child.slug}`}
-                          className="block px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors no-underline text-left border-b border-gray-100 last:border-b-0"
+                          className="block px-4 py-2 text-small text-body hover:bg-surface-2 hover:text-link-hover transition-colors no-underline text-left border-b border-line last:border-b-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0"
                         >
                           {child.name}
                         </Link>
@@ -141,54 +181,87 @@ export default function Header() {
             );
           })}
 
-          <span className="text-gray-300 select-none">/</span>
+          <span className="text-faint select-none">/</span>
           <div className="group relative h-full flex items-center">
             <Link
               href="/about"
-              className={`flex items-center gap-1 hover:text-primary transition-colors no-underline ${
-                isActive("/about") ? "text-primary font-bold" : "text-[#222]"
+              className={`flex items-center gap-1 hover:text-link-hover transition-colors no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0 rounded-control ${
+                isActive("/about") ? "text-link font-bold" : "text-body"
               }`}
             >
               <span>লেখক প্রসঙ্গে</span>
               <ChevronDown
                 size={13}
-                className="text-primary transition-transform duration-200 group-hover:rotate-180"
+                className="text-link transition-transform duration-200 group-hover:rotate-180"
               />
             </Link>
-            <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-0 min-w-[180px] bg-white shadow-lg border border-gray-200 border-t-2 border-t-primary py-1.5 z-50">
+            <div className="hidden group-hover:block absolute top-full left-1/2 -translate-x-1/2 mt-0 min-w-[180px] bg-surface shadow-raised border border-line border-t-2 border-t-primary py-1.5 z-50">
               <Link
                 href="/about"
-                className="block px-4 py-2 text-[13px] text-gray-700 hover:bg-gray-50 hover:text-primary transition-colors no-underline text-left"
+                className="block px-4 py-2 text-small text-body hover:bg-surface-2 hover:text-link-hover transition-colors no-underline text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0"
               >
                 পরিচিতি ও যোগাযোগ
               </Link>
             </div>
           </div>
-        </nav>
+          </nav>
+        </Container>
       </div>
 
       {/* Mobile Menu Drawer */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-gray-200 bg-white animate-fade-in">
+        <div className="md:hidden border-t border-line bg-page-alt animate-fade-in">
           <div className="px-4 py-3 flex flex-col gap-1 max-h-[75vh] overflow-y-auto">
-            <Link
-              href="/"
-              className={`px-4 py-2.5 rounded text-sm font-medium no-underline ${
-                isActive("/")
-                  ? "text-primary bg-primary/10"
-                  : "text-gray-700 hover:bg-gray-100"
-              }`}
-            >
-              মূলপাতা
-            </Link>
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between">
+                <Link
+                  href="/"
+                  className={`flex-1 px-4 py-2.5 rounded-control text-sm font-medium no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0 ${
+                    isActive("/")
+                      ? "text-link bg-primary-soft"
+                      : "text-body hover:bg-surface-2"
+                  }`}
+                >
+                  {homeCategoryLabel}
+                </Link>
+                {systemCategory && homeCategoryChildren.length > 0 && (
+                  <button
+                    onClick={() => toggleCat(systemCategory.id)}
+                    className="p-2.5 text-muted bg-transparent border-none cursor-pointer rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0"
+                  >
+                    <ChevronDown
+                      size={16}
+                      className={`transition-transform duration-200 ${
+                        expandedCats[systemCategory.id] ? "rotate-180 text-link" : ""
+                      }`}
+                    />
+                  </button>
+                )}
+              </div>
+              {systemCategory &&
+                homeCategoryChildren.length > 0 &&
+                expandedCats[systemCategory.id] && (
+                  <div className="flex flex-col pl-4 border-l border-line ml-4">
+                    {homeCategoryChildren.map((child: Category) => (
+                      <Link
+                        key={child.id}
+                        href={`/category/${child.slug}`}
+                        className="px-4 py-2 text-sm text-muted no-underline hover:text-link-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0 rounded-control"
+                      >
+                        ▸ {child.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+            </div>
 
             {categories
-              .filter((c: any) => !c.parentId)
-              .map((cat: any) => {
+              .filter((c: Category) => !c.parentId && !isSystemCategory(c))
+              .map((cat: Category) => {
                 const children =
                   cat.children && cat.children.length > 0
                     ? cat.children
-                    : categories.filter((c: any) => c.parentId === cat.id);
+                    : categories.filter((c: Category) => c.parentId === cat.id);
                 const hasChildren = children.length > 0;
                 const isExpanded = expandedCats[cat.id];
                 return (
@@ -196,31 +269,31 @@ export default function Header() {
                     <div className="flex items-center justify-between">
                       <Link
                         href={`/category/${cat.slug}`}
-                        className="flex-1 px-4 py-2.5 rounded text-sm font-medium text-gray-700 no-underline hover:text-primary"
+                        className="flex-1 px-4 py-2.5 rounded-control text-sm font-medium text-body no-underline hover:text-link-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0"
                       >
                         {cat.name}
                       </Link>
                       {hasChildren && (
                         <button
                           onClick={() => toggleCat(cat.id)}
-                          className="p-2.5 text-gray-500 bg-transparent border-none cursor-pointer"
+                          className="p-2.5 text-muted bg-transparent border-none cursor-pointer rounded-control focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0"
                         >
                           <ChevronDown
                             size={16}
                             className={`transition-transform duration-200 ${
-                              isExpanded ? "rotate-180 text-primary" : ""
+                              isExpanded ? "rotate-180 text-link" : ""
                             }`}
                           />
                         </button>
                       )}
                     </div>
                     {hasChildren && isExpanded && (
-                      <div className="flex flex-col pl-4 border-l border-gray-200 ml-4">
-                        {children.map((child: any) => (
+                      <div className="flex flex-col pl-4 border-l border-line ml-4">
+                        {children.map((child: Category) => (
                           <Link
                             key={child.id}
                             href={`/category/${child.slug}`}
-                            className="px-4 py-2 text-sm text-gray-600 no-underline hover:text-primary"
+                            className="px-4 py-2 text-sm text-muted no-underline hover:text-link-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0 rounded-control"
                           >
                             ▸ {child.name}
                           </Link>
@@ -233,10 +306,10 @@ export default function Header() {
 
             <Link
               href="/about"
-              className={`px-4 py-2.5 rounded text-sm font-medium no-underline ${
+              className={`px-4 py-2.5 rounded-control text-sm font-medium no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-link focus-visible:ring-offset-0 ${
                 isActive("/about")
-                  ? "text-primary bg-primary/10"
-                  : "text-gray-700 hover:bg-gray-100"
+                  ? "text-link bg-primary-soft"
+                  : "text-body hover:bg-surface-2"
               }`}
             >
               লেখক প্রসঙ্গে

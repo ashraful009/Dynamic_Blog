@@ -25,10 +25,10 @@ const getAll = async () => {
             select: { id: true },
           },
         },
-        orderBy: { name: "asc" },
+        orderBy: [{ displayOrder: "asc" }, { name: "asc" }],
       },
     },
-    orderBy: { name: "asc" },
+    orderBy: [{ isSystem: "desc" }, { displayOrder: "asc" }, { name: "asc" }],
   });
 
   // Compute distinct published post count per category (including direct + multiPosts, and child posts for parent categories)
@@ -79,12 +79,20 @@ const create = async (data: {
     const suffix = Math.random().toString(36).substring(2, 8);
     slug = `${slug}-${suffix}`;
   }
+  const targetParentId = data.parentId || null;
+  const maxOrder = await prisma.category.aggregate({
+    where: { parentId: targetParentId },
+    _max: { displayOrder: true },
+  });
+  const nextDisplayOrder = (maxOrder._max.displayOrder ?? -1) + 1;
+
   const category = await prisma.category.create({
     data: {
       name: data.name,
       slug,
-      parentId: data.parentId || null,
+      parentId: targetParentId,
       showInHeader: data.showInHeader ?? false,
+      displayOrder: nextDisplayOrder,
     },
   });
   return category;
@@ -103,9 +111,30 @@ const update = async (
   if (!existingCategory) {
     throw new ApiError(404, "Category not found");
   }
+  if (existingCategory.isSystem) {
+    if (data.name !== undefined && data.name.trim() !== existingCategory.name) {
+      throw new ApiError(400, "Cannot rename the protected দিনলিপি category");
+    }
+    if (data.slug !== undefined && data.slug.trim() !== existingCategory.slug) {
+      throw new ApiError(400, "Cannot change the slug of the protected দিনলিপি category");
+    }
+    if (data.parentId !== undefined && data.parentId !== null) {
+      throw new ApiError(400, "দিনলিপি must remain a top-level category");
+    }
+  }
   const updateData: any = { ...data };
   if (data.parentId === "") {
     updateData.parentId = null;
+  }
+  if (
+    updateData.parentId !== undefined &&
+    updateData.parentId !== existingCategory.parentId
+  ) {
+    const maxOrder = await prisma.category.aggregate({
+      where: { parentId: updateData.parentId },
+      _max: { displayOrder: true },
+    });
+    updateData.displayOrder = (maxOrder._max.displayOrder ?? -1) + 1;
   }
   if (data.name && data.name !== existingCategory.name) {
     const nameConflict = await prisma.category.findFirst({
@@ -143,6 +172,9 @@ const deleteCategory = async (id: string) => {
   if (!category) {
     throw new ApiError(404, "Category not found");
   }
+  if (category.isSystem) {
+    throw new ApiError(400, "Cannot delete the protected দিনলিপি category");
+  }
   if (category._count.posts > 0 || category._count.multiPosts > 0) {
     throw new ApiError(400, "Cannot delete category with associated posts");
   }
@@ -150,9 +182,55 @@ const deleteCategory = async (id: string) => {
   return { id };
 };
 
+const reorder = async (data: {
+  parentId: string | null;
+  orderedIds: string[];
+}) => {
+  if (new Set(data.orderedIds).size !== data.orderedIds.length) {
+    throw new ApiError(400, "Duplicate category IDs provided");
+  }
+
+  if (data.parentId === null) {
+    const systemCat = await prisma.category.findFirst({
+      where: { isSystem: true, parentId: null },
+      select: { id: true },
+    });
+    if (systemCat && data.orderedIds[0] !== systemCat.id) {
+      throw new ApiError(400, "দিনলিপি must remain the first top-level category");
+    }
+  }
+
+  const existing = await prisma.category.findMany({
+    where: {
+      id: { in: data.orderedIds },
+      parentId: data.parentId,
+    },
+    select: { id: true },
+  });
+
+  if (existing.length !== data.orderedIds.length) {
+    throw new ApiError(
+      400,
+      "One or more category IDs do not belong to the specified parent group"
+    );
+  }
+
+  await prisma.$transaction(
+    data.orderedIds.map((id, index) =>
+      prisma.category.update({
+        where: { id },
+        data: { displayOrder: index },
+      })
+    )
+  );
+
+  return { parentId: data.parentId, orderedIds: data.orderedIds };
+};
+
 export const CategoryService = {
   getAll,
   create,
   update,
   deleteCategory,
+  reorder,
 };

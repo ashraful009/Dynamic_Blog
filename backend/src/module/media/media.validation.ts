@@ -1,5 +1,12 @@
 import { z } from "zod";
 export const MediaValidation = {
+  getAll: z.object({
+    query: z.object({
+      page: z.string().optional(),
+      limit: z.string().optional(),
+      type: z.enum(["IMAGE", "VIDEO", "PDF"]).optional(),
+    }),
+  }),
   upload: z.object({
     body: z.object({
       alt: z

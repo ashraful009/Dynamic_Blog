@@ -92,16 +92,27 @@ export default function EditPostPage() {
   const uploadMutation = useMutation({
     mutationFn: (file: File) => mediaApi.upload(file),
     onSuccess: (res) => {
-      setCoverImage(res.data.data.url);
+      setCoverImage(res.data.data.secureUrl || res.data.data.url);
       toast.success("Cover image uploaded");
     },
     onError: () => toast.error("Failed to upload image"),
   });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      uploadMutation.mutate(e.target.files[0]);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
     }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    uploadMutation.mutate(file);
   };
 
   const handleSave = (newStatus?: "DRAFT" | "PUBLISHED") => {
@@ -211,7 +222,7 @@ export default function EditPostPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
-        <div>
+        <div className="min-w-0">
           <div className="mb-4">
             <input
               type="text"

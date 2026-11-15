@@ -13,6 +13,13 @@ router.post(
   CategoryController.create
 );
 router.patch(
+  "/reorder",
+  auth,
+  authorize("ADMIN"),
+  validateRequest(CategoryValidation.reorder),
+  CategoryController.reorder
+);
+router.patch(
   "/:id",
   auth,
   authorize("ADMIN"),

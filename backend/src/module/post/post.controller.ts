@@ -16,13 +16,14 @@ const createPost = catchAsync(async (req: AuthRequest, res: Response) => {
 });
 
 const getAllPublished = catchAsync(async (req: Request, res: Response) => {
-  const { page, limit, search, categorySlug, tagSlug } = req.query;
+  const { page, limit, search, categorySlug, tagSlug, homeOnly } = req.query;
   const result = await PostService.getAllPublished({
     page: page ? parseInt(page as string, 10) : undefined,
     limit: limit ? parseInt(limit as string, 10) : undefined,
     search: search as string | undefined,
     categorySlug: categorySlug as string | undefined,
     tagSlug: tagSlug as string | undefined,
+    homeOnly: homeOnly === "true" || homeOnly === "1",
   });
   sendResponse(res, {
     statusCode: 200,
@@ -33,8 +34,11 @@ const getAllPublished = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getFeatured = catchAsync(async (_req: Request, res: Response) => {
-  const result = await PostService.getFeatured();
+const getFeatured = catchAsync(async (req: Request, res: Response) => {
+  const { homeOnly } = req.query;
+  const result = await PostService.getFeatured({
+    homeOnly: homeOnly === "true" || homeOnly === "1",
+  });
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -44,10 +48,11 @@ const getFeatured = catchAsync(async (_req: Request, res: Response) => {
 });
 
 const getRecentIndex = catchAsync(async (req: Request, res: Response) => {
-  const { page, limit } = req.query;
+  const { page, limit, homeOnly } = req.query;
   const result = await PostService.getRecentIndex({
     page: page ? parseInt(page as string, 10) : undefined,
     limit: limit ? parseInt(limit as string, 10) : undefined,
+    homeOnly: homeOnly === "true" || homeOnly === "1",
   });
   sendResponse(res, {
     statusCode: 200,

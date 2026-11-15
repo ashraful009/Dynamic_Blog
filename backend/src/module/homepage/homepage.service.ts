@@ -11,10 +11,10 @@ const getHomepageData = async (options?: { page?: number; limit?: number }) => {
   const [settings, featuredPost, recentPostsRes, sidebarRecentRes, totalPosts, categories, tags] =
     await Promise.all([
       SiteSettingsService.getSettings(),
-      PostService.getFeatured(),
-      PostService.getRecentIndex({ page, limit }),
-      PostService.getRecentIndex({ page: 1, limit: 10 }),
-      prisma.post.count({ where: { status: "PUBLISHED" } }),
+      PostService.getFeatured({ homeOnly: true }),
+      PostService.getRecentIndex({ page, limit, homeOnly: true }),
+      PostService.getRecentIndex({ page: 1, limit: 10, homeOnly: true }),
+      PostService.countHomePublished(),
       CategoryService.getAll(),
       TagService.getAll(),
     ]);
